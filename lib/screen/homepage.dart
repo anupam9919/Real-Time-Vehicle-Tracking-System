@@ -102,10 +102,3 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-
-void main() {
-  runApp(MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: HomePage(),
-  ));
-}
