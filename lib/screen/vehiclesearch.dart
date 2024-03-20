@@ -6,18 +6,6 @@ class VehicleSearchDelegate extends SearchDelegate<String> {
   VehicleSearchDelegate(this.recentSearches);
 
   @override
-  ThemeData appBarTheme(BuildContext context) {
-    assert(context != null);
-    final ThemeData theme = Theme.of(context);
-    assert(theme != null);
-    return theme.copyWith(
-      primaryColor: Colors.green,
-      primaryIconTheme: theme.primaryIconTheme.copyWith(color: Colors.grey),
-      primaryTextTheme: theme.textTheme,
-    );
-  }
-
-  @override
   List<Widget> buildActions(BuildContext context) {
     return [
       IconButton(
