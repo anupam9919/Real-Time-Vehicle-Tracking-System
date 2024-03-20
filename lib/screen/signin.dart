@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:vehicle/screen/admin_page.dart';
-import 'package:vehicle/screen/homepage.dart';
-import 'package:vehicle/screen/student_page.dart';
-// Import the admin page
+import 'package:vehicle/screen/admin.dart';
+import 'package:vehicle/screen/homescreen.dart';
 
 class SignInPage extends StatelessWidget {
   // Sample user data
@@ -11,24 +9,27 @@ class SignInPage extends StatelessWidget {
     {'id': 'admin', 'password': 'admin123', 'role': 'admin'},
   ];
 
+  const SignInPage({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     // Variables to store user input
     String studentId = '';
     String password = '';
+    String vehicleNumber = '';
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Sign In'),
+        title: const Text('Sign In'),
       ),
       body: Padding(
-        padding: EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextField(
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Student ID',
                 border: OutlineInputBorder(),
               ),
@@ -36,9 +37,9 @@ class SignInPage extends StatelessWidget {
                 studentId = value;
               },
             ),
-            SizedBox(height: 10.0),
+            const SizedBox(height: 10.0),
             TextField(
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Password',
                 border: OutlineInputBorder(),
               ),
@@ -47,7 +48,7 @@ class SignInPage extends StatelessWidget {
                 password = value;
               },
             ),
-            SizedBox(height: 10.0),
+            const SizedBox(height: 10.0),
             ElevatedButton(
               onPressed: () {
                 // Find the user in the sample data
@@ -59,9 +60,34 @@ class SignInPage extends StatelessWidget {
 
                 // Navigate to the appropriate page based on the user's role
                 if (user['role'] == 'student') {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => HomePage()),
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Enter Vehicle Number'),
+                      content: TextField(
+                        decoration: const InputDecoration(
+                          labelText: 'Vehicle Number',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          vehicleNumber = value;
+                        },
+                      ),
+                      actions: [
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context); // Close the dialog
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => HomeScreen(),
+                              ),
+                            );
+                          },
+                          child: const Text('Submit'),
+                        ),
+                      ],
+                    ),
                   );
                 } else if (user['role'] == 'admin') {
                   Navigator.pushReplacement(
@@ -71,18 +97,19 @@ class SignInPage extends StatelessWidget {
                 } else {
                   // Show an error message if the user is not found
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Invalid Student ID or Password')),
+                    const SnackBar(
+                        content: Text('Invalid Student ID or Password')),
                   );
                 }
               },
-              child: Text('Login'),
+              child: const Text('Login'),
             ),
-            SizedBox(height: 20.0),
+            const SizedBox(height: 20.0),
             TextButton(
               onPressed: () {
                 // TODO: Implement forgot password functionality
               },
-              child: Text(
+              child: const Text(
                 'Forgot password?',
                 style: TextStyle(color: Colors.blue),
               ),

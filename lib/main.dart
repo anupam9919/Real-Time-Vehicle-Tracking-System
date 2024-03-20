@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:vehicle/screen/homepage.dart';
-import 'package:vehicle/screen/sign_in.dart';
-// Import the correct home screen file
+import 'package:vehicle/screen/homescreen.dart';
+import 'package:vehicle/screen/signin.dart';
 
 void main() {
   runApp(VehicleApp());
@@ -16,7 +15,6 @@ class VehicleApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        // home: HomePage(),
         home: SignInPage());
   }
 }
