@@ -52,6 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Vehicle Tracking App'),
       ),
+
       body: PageView(
         controller: _pageController,
         onPageChanged: (index) {
@@ -60,7 +61,17 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         },
         children: const [
-          Center(child: Text('Home Screen')),
+          Center(
+            child: Text(
+              'Welcome User!',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+
+          
           TrackingPage(),
           AccountPage(),
           HelpPage(),
