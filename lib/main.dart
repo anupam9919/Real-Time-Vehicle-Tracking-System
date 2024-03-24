@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:vehicle/screen/homescreen.dart';
-import 'package:vehicle/screen/signin.dart';
+import 'package:vehicle/pages/gmaps.dart';
+import 'package:vehicle/pages/homescreen.dart';
+
+// import 'package:vehicle/screen/signin.dart';
+// import 'package:vehicle/screen/temp.dart';
 
 void main() {
   runApp(VehicleApp());
@@ -15,6 +18,8 @@ class VehicleApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home: SignInPage());
+        // home: HomeScreen());
+        home: Maps());
+    // home: SignInPage());
   }
 }

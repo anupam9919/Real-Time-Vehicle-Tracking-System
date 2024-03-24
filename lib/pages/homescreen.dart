@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:vehicle/screen/accountpage.dart';
-import 'package:vehicle/screen/helpsupport.dart';
-import 'package:vehicle/screen/searchpage.dart';
-import 'package:vehicle/screen/track.dart';
+import 'package:vehicle/pages/accountpage.dart';
+import 'package:vehicle/pages/helpsupport.dart';
+import 'package:vehicle/pages/searchpage.dart';
+import 'package:vehicle/pages/track.dart';
+import 'package:vehicle/widgets/busstop.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -52,7 +53,6 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Vehicle Tracking App'),
       ),
-
       body: PageView(
         controller: _pageController,
         onPageChanged: (index) {
@@ -60,18 +60,8 @@ class _HomeScreenState extends State<HomeScreen> {
             _selectedIndex = index;
           });
         },
-        children: const [
-          Center(
-            child: Text(
-              'Welcome User!',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-
-          
+        children: <Widget>[
+          BusStopWidget(), // Display BusStopWidget as the first page
           TrackingPage(),
           AccountPage(),
           HelpPage(),

@@ -1,23 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:vehicle/screen/admin.dart';
-import 'package:vehicle/screen/homescreen.dart';
+import 'package:vehicle/pages/admin.dart';
+import 'package:vehicle/pages/homescreen.dart';
 
-class SignInPage extends StatelessWidget {
+class SignInPage extends StatefulWidget {
+  const SignInPage({Key? key}) : super(key: key);
+
+  @override
+  _SignInPageState createState() => _SignInPageState();
+}
+
+class _SignInPageState extends State<SignInPage> {
   // Sample user data
   static const List<Map<String, dynamic>> users = [
     {'id': 'student', 'password': 'student123', 'role': 'student'},
     {'id': 'admin', 'password': 'admin123', 'role': 'admin'},
   ];
 
-  const SignInPage({Key? key}) : super(key: key);
+  // Variables to store user input
+  String studentId = '';
+  String password = '';
+
+  // Variable to control password visibility
+  bool _obscurePassword = true;
 
   @override
   Widget build(BuildContext context) {
-    // Variables to store user input
-    String studentId = '';
-    String password = '';
-    String vehicleNumber = '';
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sign In'),
@@ -30,22 +37,33 @@ class SignInPage extends StatelessWidget {
           children: [
             TextField(
               decoration: const InputDecoration(
-                labelText: 'Student ID',
+                labelText: 'User ID',
                 border: OutlineInputBorder(),
               ),
               onChanged: (value) {
-                studentId = value;
+                studentId = value.trim();
               },
             ),
             const SizedBox(height: 10.0),
             TextField(
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Password',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                    color: Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
+                ),
               ),
-              obscureText: true,
+              obscureText: _obscurePassword,
               onChanged: (value) {
-                password = value;
+                password = value.trim();
               },
             ),
             const SizedBox(height: 10.0),
@@ -54,39 +72,17 @@ class SignInPage extends StatelessWidget {
                 // Find the user in the sample data
                 var user = users.firstWhere(
                   (user) =>
-                      user['id'] == studentId && user['password'] == password,
+                      user['id'] == studentId.trim() &&
+                      user['password'] == password.trim(),
                   orElse: () => {'id': '', 'password': '', 'role': ''},
                 );
 
                 // Navigate to the appropriate page based on the user's role
                 if (user['role'] == 'student') {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Enter Vehicle Number'),
-                      content: TextField(
-                        decoration: const InputDecoration(
-                          labelText: 'Vehicle Number',
-                          border: OutlineInputBorder(),
-                        ),
-                        onChanged: (value) {
-                          vehicleNumber = value;
-                        },
-                      ),
-                      actions: [
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(context); // Close the dialog
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => HomeScreen(),
-                              ),
-                            );
-                          },
-                          child: const Text('Submit'),
-                        ),
-                      ],
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => HomeScreen(),
                     ),
                   );
                 } else if (user['role'] == 'admin') {
@@ -98,7 +94,7 @@ class SignInPage extends StatelessWidget {
                   // Show an error message if the user is not found
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                        content: Text('Invalid Student ID or Password')),
+                        content: Text('Invalid ID or Password')),
                   );
                 }
               },

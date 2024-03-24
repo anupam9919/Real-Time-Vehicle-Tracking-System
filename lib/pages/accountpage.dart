@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:vehicle/screen/signin.dart';
+import 'package:vehicle/pages/signin.dart';
 
-class AccountPage extends StatelessWidget {
+class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
+
+  @override
+  State<AccountPage> createState() => _AccountPageState();
+}
+
+class _AccountPageState extends State<AccountPage> {
+  String _selectedBus = '';
+
+  final List<String> _buses = ['', 'A1', 'B2', 'C3', 'D4'];
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +48,25 @@ class AccountPage extends StatelessWidget {
           const ListTile(
             title: Text('Year'),
             subtitle: Text('3rd Year'),
+          ),
+          ListTile(
+            title: const Text('Bus Choice'),
+            subtitle:
+                Text(_selectedBus.isNotEmpty ? _selectedBus : 'Select Bus'),
+            trailing: DropdownButton<String>(
+              value: _selectedBus,
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedBus = newValue!;
+                });
+              },
+              items: _buses.map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+            ),
           ),
           ListTile(
             title: const Text('Logout'),
