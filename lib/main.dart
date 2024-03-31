@@ -18,8 +18,8 @@ class VehicleApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        // home: HomeScreen());
-        home: Maps());
+        home: HomeScreen());
+        // home: Maps());
     // home: SignInPage());
   }
 }
