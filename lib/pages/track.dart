@@ -1,10 +1,71 @@
-// tracking_page.dart
+import 'dart:async';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:timeline_tile/timeline_tile.dart';
-import 'boarding_point.dart';
+import 'package:vehicle/pages/boarding_point.dart';
+import 'package:vehicle/pages/accountpage.dart';
 
-class TrackingPage extends StatelessWidget {
+class TrackingPage extends StatefulWidget {
   const TrackingPage({Key? key}) : super(key: key);
+
+  @override
+  _TrackingPageState createState() => _TrackingPageState();
+}
+
+class _TrackingPageState extends State<TrackingPage> {
+  final DatabaseReference _databaseReference =
+      FirebaseDatabase.instance.ref().child('vehicles');
+  Timer? _timer;
+  final String vehicleName = 'Ac'; // Replace with actual vehicle name
+// final String vehicleName =_selectedBus;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 5), (_) {
+      _fetchVehicleLocation();
+    });
+  }
+
+  Future<Map<String, dynamic>> getVehicleLocation(String vehicleName) async {
+    final snapshot =
+        await _databaseReference.child(vehicleName).child('location').get();
+
+    if (snapshot.exists) {
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      return {
+        'latitude': data['latitude'].toDouble(),
+        'longitude': data['longitude'].toDouble(),
+        'timestamp': data['timestamp'] as String,
+      };
+    } else {
+      return {}; // Return an empty map if the location data doesn't exist
+    }
+  }
+
+  Future<void> _fetchVehicleLocation() async {
+    final vehicleLocation = await getVehicleLocation(vehicleName);
+    if (vehicleLocation.isNotEmpty) {
+      setState(() {
+        // Update the UI with the retrieved location data
+        print('Latitude: ${vehicleLocation['latitude']}');
+        print('Longitude: ${vehicleLocation['longitude']}');
+        print('Timestamp: ${vehicleLocation['timestamp']}');
+      });
+    } else {
+      print('No location data found for $vehicleName');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

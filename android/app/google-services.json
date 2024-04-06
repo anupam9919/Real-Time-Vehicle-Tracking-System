@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "612930631250",
+    "firebase_url": "https://vehicle-tracking-system-5d09e-default-rtdb.firebaseio.com",
+    "project_id": "vehicle-tracking-system-5d09e",
+    "storage_bucket": "vehicle-tracking-system-5d09e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:612930631250:android:b77153a06c8b5961e1918b",
+        "android_client_info": {
+          "package_name": "com.example.locator"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_lS1BdqXSL12yYaa-3tYzCoa86Xrm-Sc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:612930631250:android:71764b75e6a46cebe1918b",
+        "android_client_info": {
+          "package_name": "com.example.vehicle"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_lS1BdqXSL12yYaa-3tYzCoa86Xrm-Sc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
