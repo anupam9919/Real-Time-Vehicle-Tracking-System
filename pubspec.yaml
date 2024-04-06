@@ -29,6 +29,8 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   cupertino_icons: ^1.0.6
+  firebase_core: ^2.28.0
+  firebase_database: ^10.5.0
   flutter:
     sdk: flutter
   form_field_validator: ^1.1.0
