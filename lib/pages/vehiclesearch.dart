@@ -9,7 +9,7 @@ class VehicleSearchDelegate extends SearchDelegate<String> {
   List<Widget> buildActions(BuildContext context) {
     return [
       IconButton(
-        icon: Icon(Icons.clear),
+        icon: const Icon(Icons.clear),
         onPressed: () {
           query = '';
         },
@@ -51,7 +51,7 @@ class VehicleSearchDelegate extends SearchDelegate<String> {
       itemCount: suggestions.length,
       itemBuilder: (BuildContext context, int index) {
         return ListTile(
-          leading: Icon(Icons.directions_car),
+          leading: const Icon(Icons.directions_car),
           title: Text(suggestions[index]),
           onTap: () {
             query = suggestions[index];
