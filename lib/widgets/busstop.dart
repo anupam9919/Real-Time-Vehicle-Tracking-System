@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:vehicle/pages/searchpage.dart';
 
 class BusStopWidget extends StatelessWidget {
-  const BusStopWidget({Key? key}) : super(key: key);
+  const BusStopWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +27,7 @@ class BusStopWidget extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 'Next Buses',
-                style: Theme.of(context).textTheme.subtitle1,
+                style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
               _buildBusInfo(
@@ -47,7 +47,7 @@ class BusStopWidget extends StatelessWidget {
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => SearchPage(),
+                        builder: (context) => const SearchPage(),
                       ),
                     );
                     // Handle "See all buses" button press

@@ -3,10 +3,9 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:vehicle/pages/boarding_point.dart';
-import 'package:vehicle/pages/accountpage.dart';
 
 class TrackingPage extends StatefulWidget {
-  const TrackingPage({Key? key}) : super(key: key);
+  const TrackingPage({super.key});
 
   @override
   _TrackingPageState createState() => _TrackingPageState();

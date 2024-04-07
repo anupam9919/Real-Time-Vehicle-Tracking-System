@@ -3,7 +3,7 @@ import 'package:vehicle/pages/admin.dart';
 import 'package:vehicle/pages/homescreen.dart';
 
 class SignInPage extends StatefulWidget {
-  const SignInPage({Key? key}) : super(key: key);
+  const SignInPage({super.key});
 
   @override
   _SignInPageState createState() => _SignInPageState();
@@ -82,13 +82,13 @@ class _SignInPageState extends State<SignInPage> {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => HomeScreen(),
+                      builder: (context) => const HomeScreen(),
                     ),
                   );
                 } else if (user['role'] == 'admin') {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => AdminPage()),
+                    MaterialPageRoute(builder: (context) => const AdminPage()),
                   );
                 } else {
                   // Show an error message if the user is not found

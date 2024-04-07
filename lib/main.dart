@@ -16,10 +16,12 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
 );
-  runApp(VehicleApp());
+  runApp(const VehicleApp());
 }
 
 class VehicleApp extends StatelessWidget {
+  const VehicleApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -28,7 +30,7 @@ class VehicleApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home: HomeScreen());
+        home: const HomeScreen());
     // home: Maps());
     // home: SignInPage());
   }

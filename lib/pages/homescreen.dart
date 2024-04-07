@@ -6,7 +6,7 @@ import 'package:vehicle/pages/track.dart';
 import 'package:vehicle/widgets/busstop.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -42,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _openSearchPage() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => SearchPage(),
+        builder: (context) => const SearchPage(),
       ),
     );
   }
@@ -60,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _selectedIndex = index;
           });
         },
-        children: <Widget>[
+        children: const <Widget>[
           BusStopWidget(), // Display BusStopWidget as the first page
           TrackingPage(),
           AccountPage(),
