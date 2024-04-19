@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:timeline_tile/timeline_tile.dart';
-import 'package:vehicle/pages/boarding_point.dart';
+import 'package:vehicle/userPages/boardingPoint.dart';
 
 class TrackingPage extends StatefulWidget {
   const TrackingPage({super.key});
@@ -90,7 +90,7 @@ class _TrackingPageState extends State<TrackingPage> {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(boardingPoints[i].name),
-                            Text(boardingPoints[i].eta),
+                            // Text(boardingPoints[i].eta),
                           ],
                         ),
                       )
@@ -103,7 +103,7 @@ class _TrackingPageState extends State<TrackingPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(boardingPoints[i].name),
-                                Text(boardingPoints[i].eta),
+                                // Text(boardingPoints[i].eta),
                               ],
                             ),
                           )
