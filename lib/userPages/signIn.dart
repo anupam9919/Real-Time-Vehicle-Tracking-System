@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:vehicle/pages/admin.dart';
-import 'package:vehicle/pages/homescreen.dart';
+import 'package:vehicle/adminPages/admin.dart';
+import 'package:vehicle/userPages/homeScreen.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -93,8 +93,7 @@ class _SignInPageState extends State<SignInPage> {
                 } else {
                   // Show an error message if the user is not found
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Invalid ID or Password')),
+                    const SnackBar(content: Text('Invalid ID or Password')),
                   );
                 }
               },

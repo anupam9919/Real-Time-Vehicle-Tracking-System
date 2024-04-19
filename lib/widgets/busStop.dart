@@ -1,8 +1,100 @@
-import 'package:flutter/material.dart';
-import 'package:vehicle/pages/searchpage.dart';
+import 'dart:async';
+import 'dart:math';
 
-class BusStopWidget extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:vehicle/userPages/boardingPoint.dart';
+import 'package:vehicle/userPages/searchPage.dart';
+
+class BusStopWidget extends StatefulWidget {
   const BusStopWidget({super.key});
+
+  @override
+  _BusStopWidgetState createState() => _BusStopWidgetState();
+}
+
+class _BusStopWidgetState extends State<BusStopWidget> {
+  Future<Position>? _currentLocationFuture;
+  String? _nearestBoardingPointName;
+  String? _eta;
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocationAndNearestBoardingPoint();
+  }
+
+  Future<void> _getCurrentLocationAndNearestBoardingPoint() async {
+    try {
+      Position userLocation = await _getCurrentLocation();
+      List<double> distances = calculateDistances(userLocation, boardingPoints);
+      int nearestBoardingPointIndex = findNearestBoardingPointIndex(distances);
+      BoardingPoint nearestBoardingPoint =
+          boardingPoints[nearestBoardingPointIndex];
+      Duration eta =
+          calculateETA(distances[nearestBoardingPointIndex], 4); // 4 km/h
+
+      setState(() {
+        _nearestBoardingPointName = nearestBoardingPoint.name;
+        _eta = '${eta.inMinutes} minutes';
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<Position> _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+
+    return await Geolocator.getCurrentPosition();
+  }
+
+  List<double> calculateDistances(
+      Position userLocation, List<BoardingPoint> boardingPoints) {
+    List<double> distances = [];
+
+    for (var boardingPoint in boardingPoints) {
+      double distance = Geolocator.distanceBetween(
+        userLocation.latitude,
+        userLocation.longitude,
+        boardingPoint.latitude,
+        boardingPoint.longitude,
+      );
+      distances.add(distance);
+    }
+
+    return distances;
+  }
+
+  int findNearestBoardingPointIndex(List<double> distances) {
+    double minDistance = distances.reduce(min);
+    return distances.indexOf(minDistance);
+  }
+
+  Duration calculateETA(double distance, double walkingSpeed) {
+    double distanceInKm = distance / 1000;
+    double timeInSeconds = distanceInKm / (walkingSpeed / 3600);
+    return Duration(seconds: timeInSeconds.round());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,8 +113,8 @@ class BusStopWidget extends StatelessWidget {
               const SizedBox(height: 16),
               _buildBusStopInfo(
                 icon: Icons.bus_alert,
-                title: 'Ada Mode',
-                subTitle: '3 min',
+                title: _nearestBoardingPointName ?? 'Loading...',
+                subTitle: _eta ?? '',
               ),
               const SizedBox(height: 16),
               Text(
@@ -50,7 +142,6 @@ class BusStopWidget extends StatelessWidget {
                         builder: (context) => const SearchPage(),
                       ),
                     );
-                    // Handle "See all buses" button press
                   },
                   child: const Text('See all buses'),
                 ),
