@@ -71,5 +71,12 @@ List<BoardingPoint> boardingPoints = [
     isEnd: true,
     // eta: '10:00 AM',
   ),
+  BoardingPoint(
+    name: 'Point J',
+    latitude: 26.451721,
+    longitude: 81.869599,
+    isEnd: true,
+    // eta: '10:00 AM',
+  ),
   // Add more boarding points here
 ];
