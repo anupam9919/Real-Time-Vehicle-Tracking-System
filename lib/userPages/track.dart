@@ -3,7 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:timeline_tile/timeline_tile.dart';
-import 'package:vehicle/userPages/boardingPoint.dart';
+import 'package:vehicle/userPages/boarding.dart';
 
 class TrackingPage extends StatefulWidget {
   const TrackingPage({Key? key}) : super(key: key);
@@ -16,7 +16,7 @@ class _TrackingPageState extends State<TrackingPage> {
   final DatabaseReference _databaseReference =
       FirebaseDatabase.instance.ref().child('vehicles');
   Timer? _timer;
-  final String vehicleName = 'Ac'; // Replace with actual vehicle name
+  final String vehicleName = 'A1'; // Replace with actual vehicle name
 
   List<double> _distances = [];
   List<Duration> _etas = [];
@@ -101,53 +101,34 @@ class _TrackingPageState extends State<TrackingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            for (int i = 0; i < boardingPoints.length; i++)
-              TimelineTile(
-                alignment: TimelineAlign.manual,
-                lineXY: 0.5,
-                indicatorStyle: const IndicatorStyle(
-                  width: 10,
-                  color: Colors.blue,
-                  padding: EdgeInsets.all(2),
+      body: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              for (int i = 0; i < boardingPoints.length; i++)
+                TimelineTile(
+                  alignment: TimelineAlign.manual,
+                  lineXY: 0.1,
+                  indicatorStyle: const IndicatorStyle(
+                    width: 10,
+                    color: Colors.blue,
+                    padding: EdgeInsets.all(2),
+                  ),
+                  endChild: Container(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: Row(
+                      children: [
+                        Text('${boardingPoints[i].name}'),
+                        const SizedBox(width: 16.0),
+                        Text(
+                            'ETA: ${_etas.isNotEmpty ? _etas[i].inMinutes : "Calculating..."} minutes'),
+                      ],
+                    ),
+                  ),
                 ),
-                startChild: boardingPoints[i].isStart ||
-                        boardingPoints[i].isIntermediate
-                    ? Container(
-                        alignment: Alignment.centerRight,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(boardingPoints[i].name),
-                            Text(
-                                'Distance: ${_distances.isNotEmpty ? _distances[i].toStringAsFixed(2) : "Calculating..."} meters'),
-                            Text(
-                                'ETA: ${_etas.isNotEmpty ? _etas[i].inMinutes : "Calculating..."} minutes'),
-                          ],
-                        ),
-                      )
-                    : const SizedBox(),
-                endChild:
-                    boardingPoints[i].isEnd || boardingPoints[i].isIntermediate
-                        ? Container(
-                            alignment: Alignment.centerLeft,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(boardingPoints[i].name),
-                                Text(
-                                    'Distance: ${_distances.isNotEmpty ? _distances[i].toStringAsFixed(2) : "Calculating..."} meters'),
-                                Text(
-                                    'ETA: ${_etas.isNotEmpty ? _etas[i].inMinutes : "Calculating..."} minutes'),
-                              ],
-                            ),
-                          )
-                        : const SizedBox(),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -3,7 +3,7 @@ import 'package:vehicle/userPages/accountPage.dart';
 import 'package:vehicle/userPages/helpSupport.dart';
 import 'package:vehicle/userPages/searchPage.dart';
 import 'package:vehicle/userPages/track.dart';
-import 'package:vehicle/widgets/busStop.dart';
+import 'package:vehicle/components/busStop.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
