@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:geolocator/geolocator.dart';
 
-import 'boardingPoint.dart';
+import 'boarding.dart';
 
 Future<Position> _getCurrentLocation() async {
   bool serviceEnabled;

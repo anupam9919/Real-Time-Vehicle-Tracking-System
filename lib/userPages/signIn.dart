@@ -88,7 +88,7 @@ class _SignInPageState extends State<SignInPage> {
                 } else if (user['role'] == 'admin') {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => const AdminPage()),
+                    MaterialPageRoute(builder: (context) => AdminPage()),
                   );
                 } else {
                   // Show an error message if the user is not found

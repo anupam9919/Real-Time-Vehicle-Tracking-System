@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:vehicle/firebase_options.dart';
 import 'package:vehicle/userPages/homeScreen.dart';
+import 'package:vehicle/userPages/signIn.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,8 +23,8 @@ class VehicleApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home: const HomeScreen());
-    // home: Maps());
-    // home: SignInPage());
+        // home: const HomeScreen());
+        // home: Maps());
+        home: SignInPage());
   }
 }
