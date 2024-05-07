@@ -101,33 +101,41 @@ class _TrackingPageState extends State<TrackingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              for (int i = 0; i < boardingPoints.length; i++)
-                TimelineTile(
-                  alignment: TimelineAlign.manual,
-                  lineXY: 0.1,
-                  indicatorStyle: const IndicatorStyle(
-                    width: 10,
-                    color: Colors.blue,
-                    padding: EdgeInsets.all(2),
-                  ),
-                  endChild: Container(
-                    padding: const EdgeInsets.only(left: 8.0),
-                    child: Row(
-                      children: [
-                        Text('${boardingPoints[i].name}'),
-                        const SizedBox(width: 16.0),
-                        Text(
-                            'ETA: ${_etas.isNotEmpty ? _etas[i].inMinutes : "Calculating..."} minutes'),
-                      ],
-                    ),
-                  ),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: SingleChildScrollView(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    for (int i = 0; i < boardingPoints.length; i++)
+                      TimelineTile(
+                        alignment: TimelineAlign.manual,
+                        lineXY: 0.1,
+                        indicatorStyle: const IndicatorStyle(
+                          width: 10,
+                          color: Colors.deepPurple,
+                          padding: EdgeInsets.all(2),
+                        ),
+                        endChild: Container(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Row(
+                            children: [
+                              Text(boardingPoints[i].name),
+                              const SizedBox(width: 16.0),
+                              Text(
+                                  'ETA: ${_etas.isNotEmpty ? _etas[i].inMinutes : "Calculating..."} minutes'),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-            ],
+              ),
+            ),
           ),
         ),
       ),
