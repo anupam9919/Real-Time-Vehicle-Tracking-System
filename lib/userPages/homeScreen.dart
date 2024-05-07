@@ -51,7 +51,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Vehicle Tracking App'),
+        shape:
+            ContinuousRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        backgroundColor: Colors.deepPurple,
+        title: const Text(
+          'Vehicle Tracking App',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+        ),
       ),
       body: PageView(
         controller: _pageController,
@@ -68,18 +74,25 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
+        type: BottomNavigationBarType.shifting,
+        enableFeedback: true,
+        unselectedItemColor: Colors.grey,
+        selectedIconTheme:
+            const IconThemeData(color: Colors.deepPurple, size: 32),
+        unselectedIconTheme: const IconThemeData(size: 25),
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.home_rounded),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.track_changes),
+            icon: Icon(Icons.location_on_rounded),
             label: 'Track',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle),
+            icon: Icon(Icons.account_circle_rounded),
             label: 'Account',
           ),
           BottomNavigationBarItem(

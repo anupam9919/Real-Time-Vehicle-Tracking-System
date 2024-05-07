@@ -21,10 +21,10 @@ class VehicleApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'Vehicle App',
         theme: ThemeData(
-          primarySwatch: Colors.blue,
+          primarySwatch: Colors.purple,
         ),
         // home: const HomeScreen());
         // home: Maps());
-        home: SignInPage());
+        home: const HomeScreen());
   }
 }

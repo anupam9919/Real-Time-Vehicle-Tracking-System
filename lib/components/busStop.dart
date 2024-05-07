@@ -147,7 +147,7 @@ class _BusStopWidgetState extends State<BusStopWidget> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(20.0),
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -158,27 +158,33 @@ class _BusStopWidgetState extends State<BusStopWidget> {
                 'Nearest Bus Stop',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 30),
               _buildBusStopInfo(
                 icon: Icons.location_on,
                 title: _nearestBoardingPointName ?? 'Loading...',
                 subTitle: _eta ?? '',
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 40),
               Text(
                 'Next Buses',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
-              const SizedBox(height: 8),
-              ..._nearestBuses.map((bus) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: _buildBusInfo(
-                      busNumber: bus['vehicleName'],
-                      eta: bus['eta'].inMinutes.toString(),
-                    ),
-                  )),
               const SizedBox(height: 16),
-              Center(
+              Expanded(
+                child: ListView(
+                  children: _nearestBuses
+                      .map((bus) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: _buildBusInfo(
+                              busNumber: bus['vehicleName'],
+                              eta: bus['eta'].inMinutes.toString(),
+                            ),
+                          ))
+                      .toList(),
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).push(
