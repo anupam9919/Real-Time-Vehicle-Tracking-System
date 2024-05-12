@@ -1,7 +1,8 @@
+
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:vehicle/firebase_options.dart';
-import 'package:vehicle/userPages/homeScreen.dart';
 import 'package:vehicle/userPages/signIn.dart';
 
 void main() async {
@@ -18,13 +19,12 @@ class VehicleApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Vehicle App',
-        theme: ThemeData(
-          primarySwatch: Colors.purple,
-        ),
-        // home: const HomeScreen());
-        // home: Maps());
-        home: const HomeScreen());
+      debugShowCheckedModeBanner: false,
+      title: 'Vehicle App',
+      theme: ThemeData(
+        primarySwatch: Colors.purple,
+      ),
+      home: const SignInPage()
+    );
   }
 }

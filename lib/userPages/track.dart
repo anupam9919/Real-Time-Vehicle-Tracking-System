@@ -88,11 +88,14 @@ class _TrackingPageState extends State<TrackingPage> {
   List<Duration> calculateETAs(List<double> distances) {
     List<Duration> etas = [];
 
+    // Assuming an average bus speed of 30 km/h (you can adjust this value as needed)
+    double busSpeedInKmPerHour = 30;
+
     for (var distance in distances) {
       double distanceInKm = distance / 1000;
-      double timeInSeconds =
-          distanceInKm / (4 / 3600); // Assuming walking speed of 4 km/h
-      etas.add(Duration(seconds: timeInSeconds.round()));
+      double timeInHours = distanceInKm / busSpeedInKmPerHour;
+      int timeInSeconds = (timeInHours * 3600).round();
+      etas.add(Duration(seconds: timeInSeconds));
     }
 
     return etas;
