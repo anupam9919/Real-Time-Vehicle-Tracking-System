@@ -19,6 +19,7 @@ class _SignInPageState extends State<SignInPage> {
   // Variables to store user input
   String studentId = '';
   String password = '';
+  String selectedRole = 'student'; // Default role is 'student'
 
   // Variable to control password visibility
   bool _obscurePassword = true;
@@ -35,6 +36,29 @@ class _SignInPageState extends State<SignInPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            DropdownButtonFormField<String>(
+              value: selectedRole,
+              onChanged: (String? newValue) {
+                setState(() {
+                  selectedRole = newValue!;
+                });
+              },
+              items: const [
+                DropdownMenuItem<String>(
+                  value: 'student',
+                  child: Text('User'),
+                ),
+                DropdownMenuItem<String>(
+                  value: 'admin',
+                  child: Text('Admin'),
+                ),
+              ],
+              decoration: const InputDecoration(
+                labelText: 'Role',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 10.0),
             TextField(
               decoration: const InputDecoration(
                 labelText: 'User ID',
@@ -73,7 +97,8 @@ class _SignInPageState extends State<SignInPage> {
                 var user = users.firstWhere(
                   (user) =>
                       user['id'] == studentId.trim() &&
-                      user['password'] == password.trim(),
+                      user['password'] == password.trim() &&
+                      user['role'] == selectedRole,
                   orElse: () => {'id': '', 'password': '', 'role': ''},
                 );
 

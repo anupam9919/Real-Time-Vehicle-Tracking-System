@@ -56,18 +56,18 @@ class _BusStopWidgetState extends State<BusStopWidget> {
     List<Map<String, dynamic>> dummyBuses = [
       {
         'vehicleName': 'Bus-01',
-        'latitude': 31.4834,
-        'longitude': 74.3722,
+        'latitude': 25.362357,
+        'longitude': 81.882431,
       },
       {
         'vehicleName': 'Bus-02',
-        'latitude': 31.4804,
-        'longitude': 74.3752,
+        'latitude': 25.322336,
+        'longitude': 81.914504,
       },
       {
         'vehicleName': 'Bus-03',
-        'latitude': 31.4824,
-        'longitude': 74.3762,
+        'latitude': 25.386473,
+        'longitude': 81.868368,
       },
     ];
 
