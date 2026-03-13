@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:vehicle/services/app_logger.dart';
-import 'package:vehicle/userPages/accountPage.dart';
-import 'package:vehicle/userPages/helpSupport.dart';
-import 'package:vehicle/userPages/searchPage.dart';
+import 'package:vehicle/userPages/account_page.dart';
+import 'package:vehicle/userPages/help_support.dart';
+import 'package:vehicle/userPages/search_page.dart';
 import 'package:vehicle/userPages/track.dart';
-import 'package:vehicle/components/busStop.dart';
+import 'package:vehicle/components/bus_stop.dart';
 
 final _log = AppLogger.getLogger('HomeScreen');
 

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:vehicle/services/app_logger.dart';
-import 'package:vehicle/userPages/signIn.dart';
+import 'package:vehicle/userPages/sign_in.dart';
 
 final _log = AppLogger.getLogger('DriverHome');
 
@@ -126,6 +126,15 @@ class _DriverHomePageState extends State<DriverHomePage> {
   }
 
   void _toggleLive() {
+    if (!_isLive && widget.assignedVehicle.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No vehicle assigned. Contact your admin to assign a vehicle first.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
     setState(() {
       _isLive = !_isLive;
       if (_isLive) {
