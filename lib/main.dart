@@ -1,6 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:vehicle/firebase_options.dart';
 import 'package:vehicle/services/app_logger.dart';
 import 'package:vehicle/userPages/signIn.dart';
@@ -11,10 +10,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   AppLogger.init();
   _log.info('App starting...');
-
-  _log.info('Loading environment variables...');
-  await dotenv.load(fileName: ".env");
-  _log.info('Environment variables loaded successfully');
 
   _log.info('Initializing Firebase...');
   await Firebase.initializeApp(

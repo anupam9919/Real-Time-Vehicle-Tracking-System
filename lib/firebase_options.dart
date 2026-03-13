@@ -3,10 +3,6 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:vehicle/services/app_logger.dart';
-
-final _log = AppLogger.getLogger('FirebaseOptions');
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -21,76 +17,69 @@ final _log = AppLogger.getLogger('FirebaseOptions');
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      _log.info('Platform detected: Web');
       return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
-        _log.info('Platform detected: Android');
         return android;
       case TargetPlatform.iOS:
-        _log.info('Platform detected: iOS');
         return ios;
       case TargetPlatform.macOS:
-        _log.info('Platform detected: macOS');
         return macos;
       case TargetPlatform.windows:
-        _log.warning('Unsupported platform: Windows');
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for windows - '
           'you can reconfigure this by running the FlutterFire CLI again.',
         );
       case TargetPlatform.linux:
-        _log.warning('Unsupported platform: Linux');
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
           'you can reconfigure this by running the FlutterFire CLI again.',
         );
       default:
-        _log.severe('Unknown platform: $defaultTargetPlatform');
         throw UnsupportedError(
           'DefaultFirebaseOptions are not supported for this platform.',
         );
     }
   }
 
-  static FirebaseOptions get web => FirebaseOptions(
-    apiKey: dotenv.env['FIREBASE_WEB_API_KEY']!,
-    appId: dotenv.env['FIREBASE_WEB_APP_ID']!,
-    messagingSenderId: dotenv.env['FIREBASE_WEB_MESSAGING_SENDER_ID']!,
-    projectId: dotenv.env['FIREBASE_WEB_PROJECT_ID']!,
-    authDomain: dotenv.env['FIREBASE_WEB_AUTH_DOMAIN']!,
-    databaseURL: dotenv.env['FIREBASE_WEB_DATABASE_URL']!,
-    storageBucket: dotenv.env['FIREBASE_WEB_STORAGE_BUCKET']!,
-    measurementId: dotenv.env['FIREBASE_WEB_MEASUREMENT_ID']!,
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyArbavgqFuy_CJtJu6FKrTVdDz9ys-jQ28',
+    appId: '1:612930631250:web:693ba42bd49041aee1918b',
+    messagingSenderId: '612930631250',
+    projectId: 'vehicle-tracking-system-5d09e',
+    authDomain: 'vehicle-tracking-system-5d09e.firebaseapp.com',
+    databaseURL: 'https://vehicle-tracking-system-5d09e-default-rtdb.firebaseio.com',
+    storageBucket: 'vehicle-tracking-system-5d09e.appspot.com',
+    measurementId: 'G-PQCD30HEDM',
   );
 
-  static FirebaseOptions get android => FirebaseOptions(
-    apiKey: dotenv.env['FIREBASE_ANDROID_API_KEY']!,
-    appId: dotenv.env['FIREBASE_ANDROID_APP_ID']!,
-    messagingSenderId: dotenv.env['FIREBASE_ANDROID_MESSAGING_SENDER_ID']!,
-    projectId: dotenv.env['FIREBASE_ANDROID_PROJECT_ID']!,
-    databaseURL: dotenv.env['FIREBASE_ANDROID_DATABASE_URL']!,
-    storageBucket: dotenv.env['FIREBASE_ANDROID_STORAGE_BUCKET']!,
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyB_lS1BdqXSL12yYaa-3tYzCoa86Xrm-Sc',
+    appId: '1:612930631250:android:71764b75e6a46cebe1918b',
+    messagingSenderId: '612930631250',
+    projectId: 'vehicle-tracking-system-5d09e',
+    databaseURL: 'https://vehicle-tracking-system-5d09e-default-rtdb.firebaseio.com',
+    storageBucket: 'vehicle-tracking-system-5d09e.appspot.com',
   );
 
-  static FirebaseOptions get ios => FirebaseOptions(
-    apiKey: dotenv.env['FIREBASE_IOS_API_KEY']!,
-    appId: dotenv.env['FIREBASE_IOS_APP_ID']!,
-    messagingSenderId: dotenv.env['FIREBASE_IOS_MESSAGING_SENDER_ID']!,
-    projectId: dotenv.env['FIREBASE_IOS_PROJECT_ID']!,
-    databaseURL: dotenv.env['FIREBASE_IOS_DATABASE_URL']!,
-    storageBucket: dotenv.env['FIREBASE_IOS_STORAGE_BUCKET']!,
-    iosBundleId: dotenv.env['FIREBASE_IOS_BUNDLE_ID']!,
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyDBZvyXlKdfPyEf3F8-UV8sOXAHrxx6-J0',
+    appId: '1:612930631250:ios:2d999070e66b48a9e1918b',
+    messagingSenderId: '612930631250',
+    projectId: 'vehicle-tracking-system-5d09e',
+    databaseURL: 'https://vehicle-tracking-system-5d09e-default-rtdb.firebaseio.com',
+    storageBucket: 'vehicle-tracking-system-5d09e.appspot.com',
+    iosBundleId: 'com.example.vehicle',
   );
 
-  static FirebaseOptions get macos => FirebaseOptions(
-    apiKey: dotenv.env['FIREBASE_MACOS_API_KEY']!,
-    appId: dotenv.env['FIREBASE_MACOS_APP_ID']!,
-    messagingSenderId: dotenv.env['FIREBASE_MACOS_MESSAGING_SENDER_ID']!,
-    projectId: dotenv.env['FIREBASE_MACOS_PROJECT_ID']!,
-    databaseURL: dotenv.env['FIREBASE_MACOS_DATABASE_URL']!,
-    storageBucket: dotenv.env['FIREBASE_MACOS_STORAGE_BUCKET']!,
-    iosBundleId: dotenv.env['FIREBASE_MACOS_BUNDLE_ID']!,
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyDBZvyXlKdfPyEf3F8-UV8sOXAHrxx6-J0',
+    appId: '1:612930631250:ios:342268007ba7ac82e1918b',
+    messagingSenderId: '612930631250',
+    projectId: 'vehicle-tracking-system-5d09e',
+    databaseURL: 'https://vehicle-tracking-system-5d09e-default-rtdb.firebaseio.com',
+    storageBucket: 'vehicle-tracking-system-5d09e.appspot.com',
+    iosBundleId: 'com.example.vehicle.RunnerTests',
   );
 }
