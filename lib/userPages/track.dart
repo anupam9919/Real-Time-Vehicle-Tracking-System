@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:vehicle/services/app_logger.dart';
 
@@ -260,149 +263,222 @@ class _TrackingPageState extends State<TrackingPage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(color: Color(0xFF00C9FF)),
+            const SizedBox(height: 16),
+            Text('Loading vehicles...', style: GoogleFonts.outfit(color: Colors.white70)),
+          ],
+        ),
+      );
     }
 
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            // Vehicle Selector Dropdown
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: Row(
-                  children: [
-                    const Icon(Icons.directions_bus, color: Colors.deepPurple),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _selectedVehicle,
-                          hint: const Text('Select a Route / Vehicle'),
-                          isExpanded: true,
-                          icon: const Icon(Icons.arrow_drop_down, color: Colors.deepPurple),
-                          items: _availableVehicles.map((String vehicle) {
-                            return DropdownMenuItem<String>(
-                              value: vehicle,
-                              child: Text(vehicle, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                            );
-                          }).toList(),
-                          onChanged: (String? newValue) {
-                            if (newValue != null) {
-                              _selectVehicle(newValue);
-                            }
-                          },
-                        ),
-                      ),
+      backgroundColor: Colors.transparent, // Let the Home background show through
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 80.0, bottom: 20.0), // Padding to clear the transparent AppBar
+          child: Column(
+            children: [
+              // Vehicle Selector Dropdown Glass Card
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
                     ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Route Timeline
-            Expanded(
-              child: _selectedVehicle == null
-                  ? const Center(child: Text('Please select a vehicle to track', style: TextStyle(color: Colors.grey)))
-                  : _liveBoardingPoints.isEmpty
-                      ? const Center(child: Text('This vehicle has no boarding points configured.', style: TextStyle(color: Colors.grey)))
-                      : Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: ListView.builder(
-                              itemCount: _liveBoardingPoints.length,
-                              itemBuilder: (context, index) {
-                                final point = _liveBoardingPoints[index];
-                                final name = point['name']?.toString() ?? 'Unnamed Stop';
-                                final hasCoords = _hasValidCoords(point);
-                                final hasEta = _etas.length > index;
-                                final eta = hasEta ? _etas[index] : null;
-
-                                // Determine badge state
-                                String badgeText;
-                                Color badgeBg;
-                                Color badgeTextColor;
-
-                                if (!hasCoords) {
-                                  // Boarding point has no GPS coordinates set
-                                  badgeText = '📍 No GPS';
-                                  badgeBg = Colors.orange.shade100;
-                                  badgeTextColor = Colors.orange.shade800;
-                                } else if (!hasEta || eta == null) {
-                                  // Waiting for bus live location
-                                  badgeText = 'Locating...';
-                                  badgeBg = Colors.grey.shade200;
-                                  badgeTextColor = Colors.grey.shade600;
-                                } else if (eta.inMinutes <= 0) {
-                                  badgeText = 'Arriving';
-                                  badgeBg = Colors.green.shade100;
-                                  badgeTextColor = Colors.green.shade800;
-                                } else {
-                                  badgeText = '${eta.inMinutes} min';
-                                  badgeBg = Colors.blue.shade50;
-                                  badgeTextColor = Colors.blue.shade800;
-                                }
-
-                                // Indicator color
-                                Color indicatorColor;
-                                if (!hasCoords) {
-                                  indicatorColor = Colors.orange;
-                                } else if (eta != null && eta.inMinutes <= 1) {
-                                  indicatorColor = Colors.green;
-                                } else {
-                                  indicatorColor = Colors.deepPurple;
-                                }
-
-                                return TimelineTile(
-                                  alignment: TimelineAlign.manual,
-                                  lineXY: 0.1,
-                                  isFirst: index == 0,
-                                  isLast: index == _liveBoardingPoints.length - 1,
-                                  indicatorStyle: IndicatorStyle(
-                                    width: 16,
-                                    color: indicatorColor,
-                                    padding: const EdgeInsets.all(2),
-                                    iconStyle: IconStyle(iconData: Icons.circle, color: Colors.white, fontSize: 10),
-                                  ),
-                                  beforeLineStyle: const LineStyle(color: Colors.deepPurple, thickness: 2),
-                                  endChild: Container(
-                                    padding: const EdgeInsets.only(left: 16.0, right: 8.0, top: 16.0, bottom: 16.0),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                                        ),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: badgeBg,
-                                            borderRadius: BorderRadius.circular(20),
-                                          ),
-                                          child: Text(
-                                            badgeText,
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.bold,
-                                              color: badgeTextColor,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF6C63FF).withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.directions_bus_rounded, color: Color(0xFF6C63FF)),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _selectedVehicle,
+                              dropdownColor: const Color(0xFF1E1E2C), // Solid dark for menu
+                              hint: Text('Select a Route / Vehicle', style: GoogleFonts.outfit(color: Colors.white54)),
+                              isExpanded: true,
+                              icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF6C63FF), size: 28),
+                              items: _availableVehicles.map((String vehicle) {
+                                return DropdownMenuItem<String>(
+                                  value: vehicle,
+                                  child: Text(
+                                    vehicle, 
+                                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)
                                   ),
                                 );
+                              }).toList(),
+                              onChanged: (String? newValue) {
+                                if (newValue != null) {
+                                  _selectVehicle(newValue);
+                                }
                               },
                             ),
                           ),
                         ),
-            ),
-          ],
+                      ],
+                    ),
+                  ),
+                ),
+              ).animate().fade(duration: 400.ms).slideY(begin: -0.1, end: 0),
+              
+              const SizedBox(height: 24),
+
+              // Route Timeline
+              Expanded(
+                child: _selectedVehicle == null
+                    ? Center(
+                        child: Text(
+                          'Please select a vehicle to track', 
+                          style: GoogleFonts.outfit(color: Colors.white54, fontSize: 16)
+                        ).animate().fade().slideY(begin: 0.1)
+                      )
+                    : _liveBoardingPoints.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.route_rounded, size: 64, color: Colors.white.withValues(alpha: 0.1)),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'This vehicle has no boarding points configured.', 
+                                  style: GoogleFonts.outfit(color: Colors.white54)
+                                ),
+                              ],
+                            ).animate().fade().slideY(begin: 0.1)
+                          )
+                        : ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.03),
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
+                                child: ListView.builder(
+                                  itemCount: _liveBoardingPoints.length,
+                                  itemBuilder: (context, index) {
+                                    final point = _liveBoardingPoints[index];
+                                    final name = point['name']?.toString() ?? 'Unnamed Stop';
+                                    final hasCoords = _hasValidCoords(point);
+                                    final hasEta = _etas.length > index;
+                                    final eta = hasEta ? _etas[index] : null;
+
+                                    // Determine badge state
+                                    String badgeText;
+                                    Color badgeBg;
+                                    Color badgeTextColor;
+
+                                    if (!hasCoords) {
+                                      // Boarding point has no GPS coordinates set
+                                      badgeText = '📍 No GPS';
+                                      badgeBg = Colors.orange.withValues(alpha: 0.15);
+                                      badgeTextColor = Colors.orangeAccent;
+                                    } else if (!hasEta || eta == null) {
+                                      // Waiting for bus live location
+                                      badgeText = 'Locating...';
+                                      badgeBg = Colors.white.withValues(alpha: 0.1);
+                                      badgeTextColor = Colors.white54;
+                                    } else if (eta.inMinutes <= 0) {
+                                      badgeText = 'Arriving';
+                                      badgeBg = Colors.greenAccent.withValues(alpha: 0.15);
+                                      badgeTextColor = Colors.greenAccent;
+                                    } else {
+                                      badgeText = '${eta.inMinutes} min';
+                                      badgeBg = const Color(0xFF00C9FF).withValues(alpha: 0.15);
+                                      badgeTextColor = const Color(0xFF00C9FF);
+                                    }
+
+                                    // Indicator color
+                                    Color indicatorColor;
+                                    if (!hasCoords) {
+                                      indicatorColor = Colors.orangeAccent;
+                                    } else if (eta != null && eta.inMinutes <= 1) {
+                                      indicatorColor = Colors.greenAccent;
+                                    } else {
+                                      indicatorColor = const Color(0xFF00C9FF); // Neon Blue
+                                    }
+
+                                    return TimelineTile(
+                                      alignment: TimelineAlign.manual,
+                                      lineXY: 0.1,
+                                      isFirst: index == 0,
+                                      isLast: index == _liveBoardingPoints.length - 1,
+                                      indicatorStyle: IndicatorStyle(
+                                        width: 20,
+                                        color: indicatorColor,
+                                        padding: const EdgeInsets.all(4),
+                                        iconStyle: IconStyle(iconData: Icons.circle, color: const Color(0xFF1E1E2C), fontSize: 12),
+                                      ),
+                                      beforeLineStyle: LineStyle(color: Colors.white.withValues(alpha: 0.2), thickness: 2),
+                                      afterLineStyle: LineStyle(color: Colors.white.withValues(alpha: 0.2), thickness: 2),
+                                      endChild: Container(
+                                        margin: const EdgeInsets.only(left: 16.0, right: 8.0, top: 12.0, bottom: 12.0),
+                                        padding: const EdgeInsets.all(16.0),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(alpha: 0.05),
+                                          borderRadius: BorderRadius.circular(16),
+                                          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                name, 
+                                                style: GoogleFonts.outfit(
+                                                  fontWeight: FontWeight.bold, 
+                                                  fontSize: 16, 
+                                                  color: Colors.white
+                                                )
+                                              ),
+                                            ),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                              decoration: BoxDecoration(
+                                                color: badgeBg,
+                                                borderRadius: BorderRadius.circular(20),
+                                                border: Border.all(color: badgeTextColor.withValues(alpha: 0.3)),
+                                              ),
+                                              child: Text(
+                                                badgeText,
+                                                style: GoogleFonts.outfit(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: badgeTextColor,
+                                                  letterSpacing: 0.5,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ).animate().fade(delay: (200 + (50 * index)).ms).slideX(begin: 0.1, end: 0);
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+              ),
+            ],
+          ),
         ),
       ),
     );
