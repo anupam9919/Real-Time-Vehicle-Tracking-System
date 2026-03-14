@@ -96,7 +96,12 @@ class _BusStopWidgetState extends State<BusStopWidget> {
 
           if (lat != null && lng != null) {
             double distToBus = Geolocator.distanceBetween(userLoc.latitude, userLoc.longitude, lat, lng);
-            Duration eta = calculateETA(distToBus, 30); // 30 km/h avg
+            
+            // Use live speed from driver GPS if available, fallback to 25 km/h
+            double speedMs = double.tryParse(loc['speed']?.toString() ?? '') ?? 0;
+            double speedKmh = (speedMs > 1.0) ? (speedMs * 3.6) : 25.0;
+            speedKmh = speedKmh.clamp(5.0, 120.0);
+            Duration eta = calculateETA(distToBus, speedKmh);
             
             allLiveBuses.add({
               'vehicleName': vehicleNumber.toString(),

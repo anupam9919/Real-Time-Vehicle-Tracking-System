@@ -23,6 +23,7 @@ class _TrackingPageState extends State<TrackingPage> {
   List<Map<String, dynamic>> _liveBoardingPoints = [];
   List<double> _distances = [];
   List<Duration?> _etas = [];
+  double _busSpeedKmh = 25.0; // fallback speed, updated from live GPS
 
   bool _isLoading = true;
 
@@ -194,7 +195,14 @@ class _TrackingPageState extends State<TrackingPage> {
 
       final lat = _toDouble(locMap['latitude']);
       final lng = _toDouble(locMap['longitude']);
-      _log.info('Parsed location: lat=$lat, lng=$lng');
+
+      // Read live speed (m/s from Geolocator) and convert to km/h
+      final speedMs = _toDouble(locMap['speed']);
+      if (speedMs != null && speedMs > 1.0) {
+        // Only use if > 1 m/s (~3.6 km/h) to avoid noise when bus is stationary
+        _busSpeedKmh = speedMs * 3.6;
+      }
+      _log.info('Parsed location: lat=$lat, lng=$lng, speed=${_busSpeedKmh.toStringAsFixed(1)} km/h');
 
       if (lat != null && lng != null && mounted) {
         setState(() {
@@ -237,11 +245,12 @@ class _TrackingPageState extends State<TrackingPage> {
   }
 
   List<Duration?> _calculateETAs(List<double> distances) {
-    const double busSpeedKmh = 30.0;
+    // Use live speed from driver's GPS, with a sane minimum
+    final speedKmh = _busSpeedKmh.clamp(5.0, 120.0);
     return distances.map((d) {
       if (d < 0) return null; // No valid coords → no ETA
       double km = d / 1000.0;
-      double hours = km / busSpeedKmh;
+      double hours = km / speedKmh;
       return Duration(seconds: (hours * 3600.0).round());
     }).toList();
   }

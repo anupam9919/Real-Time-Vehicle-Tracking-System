@@ -103,6 +103,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
           'location': {
             'latitude': position.latitude,
             'longitude': position.longitude,
+            'speed': position.speed, // m/s from Geolocator
             'timestamp': timestamp,
           },
         });
@@ -112,7 +113,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
           _lastTimestamp = timestamp;
         });
 
-        _log.fine('Location transmitted: lat=${position.latitude}, lng=${position.longitude}');
+        _log.fine('Location transmitted: lat=${position.latitude}, lng=${position.longitude}, speed=${(position.speed * 3.6).toStringAsFixed(1)} km/h');
       } catch (e) {
         _log.warning('Error transmitting location: $e');
       }
