@@ -1,6 +1,9 @@
+import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:vehicle/adminPages/manage_drivers.dart';
 import 'package:vehicle/adminPages/manage_vehicles.dart';
 import 'package:vehicle/services/app_logger.dart';
@@ -223,141 +226,237 @@ class _AdminPageState extends State<AdminPage> {
     final adminEmail = FirebaseAuth.instance.currentUser?.email ?? 'Admin';
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Admin Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.deepPurple,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Logout',
-            onPressed: () async {
-              _log.info('Admin logging out');
-              await FirebaseAuth.instance.signOut();
-              if (!context.mounted) return;
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const SignInPage()),
-                (route) => false,
-              );
-            },
+      extendBodyBehindAppBar: true,
+      backgroundColor: const Color(0xFF0F0F1A),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: AppBar(
+              title: Text(
+                'Admin Dashboard', 
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w800, letterSpacing: 1.2)
+              ),
+              backgroundColor: Colors.white.withValues(alpha: 0.05),
+              elevation: 0,
+              centerTitle: true,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.logout_rounded, color: Color(0xFF00C9FF)),
+                  tooltip: 'Logout',
+                  onPressed: () async {
+                    _log.info('Admin logging out');
+                    await FirebaseAuth.instance.signOut();
+                    if (!context.mounted) return;
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SignInPage()),
+                      (route) => false,
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
-      body: SafeArea(
-        child: _isRefreshing
-            ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
-                onRefresh: _fetchStats,
-                child: ListView(
-                  padding: const EdgeInsets.all(16.0),
-                  children: [
-                    // Welcome Header
-                    Text(
-                      'Welcome,',
-                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                    ),
-                    Text(
-                      adminEmail,
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Stats Row
-                    Row(
-                      children: [
-                        Expanded(child: _buildStatCard('Vehicles', _totalVehicles.toString(), Icons.directions_bus, Colors.blue)),
-                        const SizedBox(width: 16),
-                        Expanded(child: _buildStatCard('Drivers', _totalDrivers.toString(), Icons.person, Colors.orange)),
-                      ],
-                    ),
-                    const SizedBox(height: 32),
-
-                    const Text('Management', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 16),
-
-                    // Services Grid
-                    GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                      children: [
-                        _buildActionCard(
-                          context,
-                          title: 'Manage\nVehicles',
-                          icon: Icons.directions_bus,
-                          color: Colors.blue,
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageVehiclesPage())),
-                        ),
-                        _buildActionCard(
-                          context,
-                          title: 'Manage\nDrivers',
-                          icon: Icons.people,
-                          color: Colors.orange,
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageDriversPage())),
-                        ),
-                        _buildActionCard(
-                          context,
-                          title: 'Add\nAdmin',
-                          icon: Icons.admin_panel_settings,
-                          color: Colors.deepPurple,
-                          onTap: _showAddAdminDialog,
-                        ),
-                      ],
-                    ),
+      body: Stack(
+        children: [
+          // Background Gradient Blobs
+          Positioned(
+            top: -100,
+            right: -50,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF6C63FF).withValues(alpha: 0.15),
+                    Colors.transparent,
                   ],
                 ),
               ),
+            ),
+          ),
+          Positioned(
+            bottom: -50,
+            left: -100,
+            child: Container(
+              width: 350,
+              height: 350,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF00C9FF).withValues(alpha: 0.15),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          
+          SafeArea(
+            child: _isRefreshing
+                ? const Center(child: CircularProgressIndicator(color: Color(0xFF00C9FF)))
+                : RefreshIndicator(
+                    color: const Color(0xFF00C9FF),
+                    backgroundColor: const Color(0xFF1E1E2C),
+                    onRefresh: _fetchStats,
+                    child: ListView(
+                      padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 20.0, bottom: 40.0),
+                      children: [
+                        // Welcome Header
+                        Text(
+                          'Welcome back,',
+                          style: GoogleFonts.outfit(fontSize: 16, color: Colors.white54),
+                        ).animate().fade().slideY(begin: -0.2),
+                        Text(
+                          adminEmail,
+                          style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                        ).animate().fade(delay: 100.ms).slideY(begin: -0.2),
+                        const SizedBox(height: 32),
+
+                        // Stats Row
+                        Row(
+                          children: [
+                            Expanded(child: _buildStatCard('Vehicles', _totalVehicles.toString(), Icons.directions_bus_rounded, const Color(0xFF00C9FF)).animate().fade(delay: 200.ms).slideX(begin: -0.1)),
+                            const SizedBox(width: 16),
+                            Expanded(child: _buildStatCard('Drivers', _totalDrivers.toString(), Icons.person_rounded, const Color(0xFF6C63FF)).animate().fade(delay: 300.ms).slideX(begin: 0.1)),
+                          ],
+                        ),
+                        const SizedBox(height: 40),
+
+                        Text(
+                          'Management', 
+                          style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)
+                        ).animate().fade(delay: 400.ms),
+                        const SizedBox(height: 16),
+
+                        // Services Grid
+                        GridView.count(
+                          crossAxisCount: 2,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          children: [
+                            _buildActionCard(
+                              context,
+                              title: 'Manage\nVehicles',
+                              icon: Icons.directions_bus_rounded,
+                              color: const Color(0xFF00C9FF),
+                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageVehiclesPage())),
+                            ).animate().fade(delay: 500.ms).scale(begin: const Offset(0.9, 0.9)),
+                            _buildActionCard(
+                              context,
+                              title: 'Manage\nDrivers',
+                              icon: Icons.people_rounded,
+                              color: const Color(0xFF6C63FF),
+                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageDriversPage())),
+                            ).animate().fade(delay: 600.ms).scale(begin: const Offset(0.9, 0.9)),
+                            _buildActionCard(
+                              context,
+                              title: 'Add\nAdmin',
+                              icon: Icons.admin_panel_settings_rounded,
+                              color: const Color(0xFFFF6B6B),
+                              onTap: _showAddAdminDialog,
+                            ).animate().fade(delay: 700.ms).scale(begin: const Offset(0.9, 0.9)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 12),
-          Text(value, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: color)),
-          Text(title, style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w500)),
-        ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 28),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                value, 
+                style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.white)
+              ),
+              Text(
+                title, 
+                style: GoogleFonts.outfit(color: Colors.white54, fontWeight: FontWeight.w500, fontSize: 14)
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildActionCard(BuildContext context, {required String title, required IconData icon, required Color color, required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
-              child: Icon(icon, color: color, size: 32),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
             ),
-            const SizedBox(height: 16),
-            Text(title, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          ],
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.15), 
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 10, spreadRadius: 2),
+                    ]
+                  ),
+                  child: Icon(icon, color: color, size: 36),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title, 
+                  textAlign: TextAlign.center, 
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold, 
+                    fontSize: 15,
+                    color: Colors.white70,
+                    height: 1.2
+                  )
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
