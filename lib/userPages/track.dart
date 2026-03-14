@@ -22,7 +22,7 @@ class _TrackingPageState extends State<TrackingPage> {
 
   List<Map<String, dynamic>> _liveBoardingPoints = [];
   List<double> _distances = [];
-  List<Duration> _etas = [];
+  List<Duration?> _etas = [];
 
   bool _isLoading = true;
 
@@ -122,7 +122,7 @@ class _TrackingPageState extends State<TrackingPage> {
           _selectedVehicle = null;
           _liveBoardingPoints = [];
           _distances = [];
-          _etas = [];
+          _etas = <Duration?>[];
         }
       });
     }, onError: (e) {
@@ -137,7 +137,7 @@ class _TrackingPageState extends State<TrackingPage> {
       _selectedVehicle = vehicleName;
       _liveBoardingPoints = [];
       _distances = [];
-      _etas = [];
+      _etas = <Duration?>[];
     });
 
     // Cancel previous subscriptions
@@ -212,25 +212,34 @@ class _TrackingPageState extends State<TrackingPage> {
 
   // ── Calculation helpers ──
 
+  /// Returns true if a boarding point has real GPS coordinates (not 0,0).
+  bool _hasValidCoords(Map<String, dynamic> point) {
+    final lat = _toDouble(point['latitude']) ?? 0.0;
+    final lng = _toDouble(point['longitude']) ?? 0.0;
+    return lat != 0.0 && lng != 0.0;
+  }
+
+  /// Returns distance in meters. Uses -1.0 as sentinel for points with no GPS.
   List<double> _calculateDistances(double lat, double lng) {
     List<double> distances = [];
     for (var point in _liveBoardingPoints) {
-      final pLat = _toDouble(point['latitude']) ?? 0.0;
-      final pLng = _toDouble(point['longitude']) ?? 0.0;
-      if (pLat != 0.0 && pLng != 0.0) {
+      if (_hasValidCoords(point)) {
+        final pLat = _toDouble(point['latitude'])!;
+        final pLng = _toDouble(point['longitude'])!;
         distances.add(
           Geolocator.distanceBetween(lat, lng, pLat, pLng).toDouble(),
         );
       } else {
-        distances.add(0.0);
+        distances.add(-1.0); // Sentinel: no valid coordinates
       }
     }
     return distances;
   }
 
-  List<Duration> _calculateETAs(List<double> distances) {
+  List<Duration?> _calculateETAs(List<double> distances) {
     const double busSpeedKmh = 30.0;
     return distances.map((d) {
+      if (d < 0) return null; // No valid coords → no ETA
       double km = d / 1000.0;
       double hours = km / busSpeedKmh;
       return Duration(seconds: (hours * 3600.0).round());
@@ -301,7 +310,44 @@ class _TrackingPageState extends State<TrackingPage> {
                               itemBuilder: (context, index) {
                                 final point = _liveBoardingPoints[index];
                                 final name = point['name']?.toString() ?? 'Unnamed Stop';
-                                final eta = _etas.length > index ? _etas[index] : null;
+                                final hasCoords = _hasValidCoords(point);
+                                final hasEta = _etas.length > index;
+                                final eta = hasEta ? _etas[index] : null;
+
+                                // Determine badge state
+                                String badgeText;
+                                Color badgeBg;
+                                Color badgeTextColor;
+
+                                if (!hasCoords) {
+                                  // Boarding point has no GPS coordinates set
+                                  badgeText = '📍 No GPS';
+                                  badgeBg = Colors.orange.shade100;
+                                  badgeTextColor = Colors.orange.shade800;
+                                } else if (!hasEta || eta == null) {
+                                  // Waiting for bus live location
+                                  badgeText = 'Locating...';
+                                  badgeBg = Colors.grey.shade200;
+                                  badgeTextColor = Colors.grey.shade600;
+                                } else if (eta.inMinutes <= 0) {
+                                  badgeText = 'Arriving';
+                                  badgeBg = Colors.green.shade100;
+                                  badgeTextColor = Colors.green.shade800;
+                                } else {
+                                  badgeText = '${eta.inMinutes} min';
+                                  badgeBg = Colors.blue.shade50;
+                                  badgeTextColor = Colors.blue.shade800;
+                                }
+
+                                // Indicator color
+                                Color indicatorColor;
+                                if (!hasCoords) {
+                                  indicatorColor = Colors.orange;
+                                } else if (eta != null && eta.inMinutes <= 1) {
+                                  indicatorColor = Colors.green;
+                                } else {
+                                  indicatorColor = Colors.deepPurple;
+                                }
 
                                 return TimelineTile(
                                   alignment: TimelineAlign.manual,
@@ -310,7 +356,7 @@ class _TrackingPageState extends State<TrackingPage> {
                                   isLast: index == _liveBoardingPoints.length - 1,
                                   indicatorStyle: IndicatorStyle(
                                     width: 16,
-                                    color: eta != null && eta.inMinutes <= 1 ? Colors.green : Colors.deepPurple,
+                                    color: indicatorColor,
                                     padding: const EdgeInsets.all(2),
                                     iconStyle: IconStyle(iconData: Icons.circle, color: Colors.white, fontSize: 10),
                                   ),
@@ -326,17 +372,15 @@ class _TrackingPageState extends State<TrackingPage> {
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                           decoration: BoxDecoration(
-                                            color: eta == null ? Colors.grey.shade200 : (eta.inMinutes <= 1 ? Colors.green.shade100 : Colors.blue.shade50),
+                                            color: badgeBg,
                                             borderRadius: BorderRadius.circular(20),
                                           ),
                                           child: Text(
-                                            eta == null
-                                                ? "Locating..."
-                                                : eta.inMinutes <= 0 ? "Arriving" : "${eta.inMinutes} min",
+                                            badgeText,
                                             style: TextStyle(
                                               fontSize: 13,
                                               fontWeight: FontWeight.bold,
-                                              color: eta == null ? Colors.grey.shade600 : (eta.inMinutes <= 1 ? Colors.green.shade800 : Colors.blue.shade800),
+                                              color: badgeTextColor,
                                             ),
                                           ),
                                         ),
