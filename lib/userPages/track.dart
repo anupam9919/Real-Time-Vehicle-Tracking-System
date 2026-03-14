@@ -16,16 +16,19 @@ class TrackingPage extends StatefulWidget {
 
 class _TrackingPageState extends State<TrackingPage> {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
-  Timer? _timer;
-  
+
   List<String> _availableVehicles = [];
   String? _selectedVehicle;
-  
-  List<Map<dynamic, dynamic>> _liveBoardingPoints = [];
+
+  List<Map<String, dynamic>> _liveBoardingPoints = [];
   List<double> _distances = [];
   List<Duration> _etas = [];
 
   bool _isLoading = true;
+
+  StreamSubscription? _vehiclesSub;
+  StreamSubscription? _locationSub;
+  StreamSubscription? _boardingPointsSub;
 
   @override
   void initState() {
@@ -36,152 +39,205 @@ class _TrackingPageState extends State<TrackingPage> {
 
   @override
   void dispose() {
-    _log.info('TrackingPage disposed, cancelling timer');
-    _timer?.cancel();
+    _log.info('TrackingPage disposed, cancelling subscriptions');
+    _vehiclesSub?.cancel();
+    _locationSub?.cancel();
+    _boardingPointsSub?.cancel();
     super.dispose();
   }
 
+  // ── Safe helpers to convert Firebase data without hard `as` casts ──
+
+  /// Safely converts any Firebase value to a string-keyed Map.
+  /// Returns null if conversion is not possible.
+  static Map<String, dynamic>? _toStringMap(dynamic value) {
+    if (value == null) return null;
+    if (value is Map) {
+      return value.map((k, v) => MapEntry(k.toString(), v));
+    }
+    return null;
+  }
+
+  /// Safely parses a number from any Firebase value (handles int, double, String).
+  static double? _toDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return double.tryParse(value.toString());
+  }
+
+  /// Recursively extracts boarding point maps from any shape of Firebase data.
+  /// A valid boarding point must contain both 'name' and 'latitude' keys.
+  static List<Map<String, dynamic>> _extractBoardingPoints(dynamic input) {
+    List<Map<String, dynamic>> results = [];
+    if (input == null) return results;
+
+    if (input is List) {
+      for (var item in input) {
+        results.addAll(_extractBoardingPoints(item));
+      }
+    } else if (input is Map) {
+      // Convert all keys to strings for safe access
+      final map = input.map((k, v) => MapEntry(k.toString(), v));
+      if (map.containsKey('name') && map.containsKey('latitude')) {
+        results.add(map);
+      } else {
+        for (var value in map.values) {
+          results.addAll(_extractBoardingPoints(value));
+        }
+      }
+    }
+    return results;
+  }
+
+  // ── Data loading ──
+
   void _loadAvailableVehicles() {
-    _dbRef.child('vehicles').onValue.listen((event) {
+    _vehiclesSub = _dbRef.child('vehicles').onValue.listen((event) {
       if (!mounted) return;
-      if (event.snapshot.value == null) {
+      final raw = event.snapshot.value;
+      if (raw == null) {
         setState(() => _isLoading = false);
         return;
       }
 
-      final data = event.snapshot.value as Map<dynamic, dynamic>;
-      final vehicles = data.keys.map((e) => e.toString()).toList();
-      
+      final map = _toStringMap(raw);
+      if (map == null) {
+        _log.warning('vehicles node is not a Map: ${raw.runtimeType}');
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final vehicles = map.keys.toList();
+      _log.info('Loaded ${vehicles.length} vehicles: $vehicles');
+
       setState(() {
         _availableVehicles = vehicles;
         _isLoading = false;
-        
-        // Auto-select the first vehicle if none selected currently
+
         if (_selectedVehicle == null && _availableVehicles.isNotEmpty) {
           _selectVehicle(_availableVehicles.first);
         } else if (!_availableVehicles.contains(_selectedVehicle)) {
-          // If selected vehicle was deleted
           _selectedVehicle = null;
           _liveBoardingPoints = [];
           _distances = [];
           _etas = [];
-          _timer?.cancel();
         }
       });
+    }, onError: (e) {
+      _log.severe('Error listening to vehicles', e);
+      if (mounted) setState(() => _isLoading = false);
     });
   }
 
   void _selectVehicle(String vehicleName) {
+    _log.info('Selected vehicle: $vehicleName');
     setState(() {
       _selectedVehicle = vehicleName;
       _liveBoardingPoints = [];
       _distances = [];
       _etas = [];
     });
-    _timer?.cancel();
-    
-    // Load boarding points for this specific vehicle
-    _dbRef.child('vehicles').child(vehicleName).child('boardingPoints').get().then((snap) {
-      if (snap.exists && snap.value != null && mounted) {
-        _log.info('Raw boardingPoints data for $vehicleName: ${snap.value}');
-        
-        dynamic data = snap.value;
-        List<Map<dynamic, dynamic>> parsedPoints = [];
-        
-        // Helper to recursively find valid boarding points (must have a 'name' and 'latitude')
-        void extractPoints(dynamic input) {
-          if (input == null) return;
-          if (input is List) {
-            for (var item in input) {
-              extractPoints(item);
-            }
-          } else if (input is Map) {
-            if (input.containsKey('name') && input.containsKey('latitude')) {
-              parsedPoints.add(Map<dynamic, dynamic>.from(input));
-            } else {
-              for (var value in input.values) {
-                extractPoints(value);
-              }
-            }
-          }
-        }
-        
-        extractPoints(data);
 
+    // Cancel previous subscriptions
+    _locationSub?.cancel();
+    _boardingPointsSub?.cancel();
+
+    // Listen to boarding points in real-time
+    _boardingPointsSub = _dbRef
+        .child('vehicles')
+        .child(vehicleName)
+        .child('boardingPoints')
+        .onValue
+        .listen((event) {
+      if (!mounted) return;
+      final raw = event.snapshot.value;
+      _log.info('Boarding points raw data type: ${raw.runtimeType}');
+      _log.info('Boarding points raw data: $raw');
+
+      final points = _extractBoardingPoints(raw);
+      _log.info('Extracted ${points.length} boarding points');
+      for (var p in points) {
+        _log.info('  → ${p['name']} (lat: ${p['latitude']}, lng: ${p['longitude']})');
+      }
+
+      setState(() {
+        _liveBoardingPoints = points;
+      });
+    }, onError: (e) {
+      _log.severe('Error listening to boarding points for $vehicleName', e);
+    });
+
+    // Listen to live location in real-time (instead of polling with Timer)
+    _locationSub = _dbRef
+        .child('vehicles')
+        .child(vehicleName)
+        .child('location')
+        .onValue
+        .listen((event) {
+      if (!mounted) return;
+      final raw = event.snapshot.value;
+      _log.info('Location raw data type: ${raw.runtimeType}');
+      _log.info('Location raw data: $raw');
+
+      if (raw == null) {
+        _log.warning('No location data available for $vehicleName');
+        return;
+      }
+
+      final locMap = _toStringMap(raw);
+      if (locMap == null) {
+        _log.warning('Location data is not a Map: ${raw.runtimeType} = $raw');
+        return;
+      }
+
+      final lat = _toDouble(locMap['latitude']);
+      final lng = _toDouble(locMap['longitude']);
+      _log.info('Parsed location: lat=$lat, lng=$lng');
+
+      if (lat != null && lng != null && mounted) {
         setState(() {
-          _liveBoardingPoints = parsedPoints;
+          _distances = _calculateDistances(lat, lng);
+          _etas = _calculateETAs(_distances);
         });
-        _log.info('Parsed boarding points count: ${_liveBoardingPoints.length}');
-        
-        // Start tracking location for this vehicle
-        _startTimer();
-        _fetchVehicleLocation(); // Initial fetch
-      }
-    });
-  }
-
-  void _startTimer() {
-    _log.info('Starting location fetch timer for $_selectedVehicle');
-    _timer = Timer.periodic(const Duration(seconds: 5), (_) {
-      _fetchVehicleLocation();
-    });
-  }
-
-  Future<void> _fetchVehicleLocation() async {
-    if (_selectedVehicle == null) return;
-
-    try {
-      final snapshot = await _dbRef.child('vehicles').child(_selectedVehicle!).child('location').get();
-      _log.info('Fetched live location for $_selectedVehicle: ${snapshot.value}');
-
-      if (snapshot.exists && snapshot.value != null) {
-        final data = snapshot.value as Map<dynamic, dynamic>;
-        final lat = double.tryParse(data['latitude'].toString());
-        final lng = double.tryParse(data['longitude'].toString());
-        
-        _log.info('Parsed Live Lat: $lat, Lng: $lng');
-
-        if (lat != null && lng != null && mounted) {
-          setState(() {
-            _distances = _calculateDistances(lat, lng);
-            _etas = _calculateETAs(_distances);
-          });
-          _log.info('Distances and ETAs calculated successfully: ${_etas.length} ETAs');
-        } else {
-          _log.warning('Could not parse latitude or longitude cleanly from Firebase data.');
-        }
+        _log.info('Calculated ${_etas.length} ETAs successfully');
       } else {
-        _log.warning('No live location exists for $_selectedVehicle in Firebase right now.');
+        _log.warning('Failed to parse lat/lng from location data');
       }
-    } catch (e) {
-      _log.warning('Error fetching location for $_selectedVehicle', e);
-    }
+    }, onError: (e) {
+      _log.severe('Error listening to location for $vehicleName', e);
+    });
   }
+
+  // ── Calculation helpers ──
 
   List<double> _calculateDistances(double lat, double lng) {
     List<double> distances = [];
     for (var point in _liveBoardingPoints) {
-      final pLat = double.tryParse(point['latitude'].toString()) ?? 0;
-      final pLng = double.tryParse(point['longitude'].toString()) ?? 0;
-      if (pLat != 0 && pLng != 0) {
-        distances.add(Geolocator.distanceBetween(lat, lng, pLat, pLng));
+      final pLat = _toDouble(point['latitude']) ?? 0.0;
+      final pLng = _toDouble(point['longitude']) ?? 0.0;
+      if (pLat != 0.0 && pLng != 0.0) {
+        distances.add(
+          Geolocator.distanceBetween(lat, lng, pLat, pLng).toDouble(),
+        );
       } else {
-        distances.add(0);
+        distances.add(0.0);
       }
     }
     return distances;
   }
 
   List<Duration> _calculateETAs(List<double> distances) {
-    double busSpeedInKmPerHour = 30; // Configurable average speed
-    return distances.map((distance) {
-      // Safely ensure distance is treated as double, as iOS sometimes returns int from Geolocator
-      double safeDistance = distance.toDouble();
-      double distanceInKm = safeDistance / 1000.0;
-      double timeInHours = distanceInKm / busSpeedInKmPerHour;
-      return Duration(seconds: (timeInHours * 3600).round());
+    const double busSpeedKmh = 30.0;
+    return distances.map((d) {
+      double km = d / 1000.0;
+      double hours = km / busSpeedKmh;
+      return Duration(seconds: (hours * 3600.0).round());
     }).toList();
   }
+
+  // ── UI ──
 
   @override
   Widget build(BuildContext context) {
@@ -230,7 +286,7 @@ class _TrackingPageState extends State<TrackingPage> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Route Timeline
             Expanded(
               child: _selectedVehicle == null
@@ -274,8 +330,8 @@ class _TrackingPageState extends State<TrackingPage> {
                                             borderRadius: BorderRadius.circular(20),
                                           ),
                                           child: Text(
-                                            eta == null 
-                                                ? "Locating..." 
+                                            eta == null
+                                                ? "Locating..."
                                                 : eta.inMinutes <= 0 ? "Arriving" : "${eta.inMinutes} min",
                                             style: TextStyle(
                                               fontSize: 13,
