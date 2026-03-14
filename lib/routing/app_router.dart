@@ -76,12 +76,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RoutePaths.driver,
         builder: (context, state) {
-          // Driver needs their info — passed via extra or fetched
+          // Driver needs their info — passed via extra or fetched from auth state
           final extra = state.extra as Map<String, String>?;
+          final user = ref.read(authStateProvider).value;
+          
           return DriverHomePage(
-            driverId: extra?['driverId'] ?? '',
-            driverName: extra?['driverName'] ?? '',
-            assignedVehicle: extra?['assignedVehicle'] ?? '',
+            driverId: extra?['driverId'] ?? user?.uid ?? '',
+            driverName: extra?['driverName'] ?? user?.name ?? '',
+            assignedVehicle: extra?['assignedVehicle'] ?? user?.assignedVehicle ?? '',
           );
         },
       ),
