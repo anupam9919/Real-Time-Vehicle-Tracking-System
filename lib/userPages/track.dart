@@ -132,18 +132,26 @@ class _TrackingPageState extends State<TrackingPage> {
 
     try {
       final snapshot = await _dbRef.child('vehicles').child(_selectedVehicle!).child('location').get();
+      _log.info('Fetched live location for $_selectedVehicle: ${snapshot.value}');
 
       if (snapshot.exists && snapshot.value != null) {
         final data = snapshot.value as Map<dynamic, dynamic>;
         final lat = double.tryParse(data['latitude'].toString());
         final lng = double.tryParse(data['longitude'].toString());
+        
+        _log.info('Parsed Live Lat: $lat, Lng: $lng');
 
         if (lat != null && lng != null && mounted) {
           setState(() {
             _distances = _calculateDistances(lat, lng);
             _etas = _calculateETAs(_distances);
           });
+          _log.info('Distances and ETAs calculated successfully: ${_etas.length} ETAs');
+        } else {
+          _log.warning('Could not parse latitude or longitude cleanly from Firebase data.');
         }
+      } else {
+        _log.warning('No live location exists for $_selectedVehicle in Firebase right now.');
       }
     } catch (e) {
       _log.warning('Error fetching location for $_selectedVehicle', e);
