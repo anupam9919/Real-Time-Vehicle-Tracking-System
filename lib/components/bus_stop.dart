@@ -63,13 +63,15 @@ class _BusStopWidgetState extends State<BusStopWidget> {
         if (vData is! Map) return;
 
         // 1. Check all boarding points to find the absolute nearest one
-        if (vData['boardingPoints'] is Map) {
-          final points = vData['boardingPoints'] as Map<dynamic, dynamic>;
-          points.forEach((key, pData) {
-            if (pData is Map) {
-              final lat = double.tryParse(pData['latitude'].toString()) ?? 0;
-              final lng = double.tryParse(pData['longitude'].toString()) ?? 0;
-              final name = pData['name']?.toString() ?? 'Unnamed';
+        void checkPoints(dynamic input) {
+          if (input == null) return;
+          if (input is List) {
+            for (var item in input) checkPoints(item);
+          } else if (input is Map) {
+            if (input.containsKey('name') && input.containsKey('latitude')) {
+              final lat = double.tryParse(input['latitude'].toString()) ?? 0;
+              final lng = double.tryParse(input['longitude'].toString()) ?? 0;
+              final name = input['name']?.toString() ?? 'Unnamed';
 
               if (lat != 0 && lng != 0) {
                 double dist = Geolocator.distanceBetween(userLoc.latitude, userLoc.longitude, lat, lng);
@@ -78,9 +80,13 @@ class _BusStopWidgetState extends State<BusStopWidget> {
                   closestPointName = name;
                 }
               }
+            } else {
+              for (var value in input.values) checkPoints(value);
             }
-          });
+          }
         }
+        
+        checkPoints(vData['boardingPoints']);
 
         // 2. Check live location of the bus itself
         if (vData['location'] is Map) {

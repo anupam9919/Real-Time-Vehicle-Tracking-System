@@ -84,16 +84,29 @@ class _TrackingPageState extends State<TrackingPage> {
     _dbRef.child('vehicles').child(vehicleName).child('boardingPoints').get().then((snap) {
       if (snap.exists && snap.value != null && mounted) {
         _log.info('Raw boardingPoints data for $vehicleName: ${snap.value}');
-        _log.info('Type of boardingPoints data: ${snap.value.runtimeType}');
         
         dynamic data = snap.value;
         List<Map<dynamic, dynamic>> parsedPoints = [];
         
-        if (data is Map) {
-          parsedPoints = data.values.whereType<Map<dynamic, dynamic>>().toList();
-        } else if (data is List) {
-          parsedPoints = data.whereType<Map<dynamic, dynamic>>().toList();
+        // Helper to recursively find valid boarding points (must have a 'name' and 'latitude')
+        void extractPoints(dynamic input) {
+          if (input == null) return;
+          if (input is List) {
+            for (var item in input) {
+              extractPoints(item);
+            }
+          } else if (input is Map) {
+            if (input.containsKey('name') && input.containsKey('latitude')) {
+              parsedPoints.add(Map<dynamic, dynamic>.from(input));
+            } else {
+              for (var value in input.values) {
+                extractPoints(value);
+              }
+            }
+          }
         }
+        
+        extractPoints(data);
 
         setState(() {
           _liveBoardingPoints = parsedPoints;
