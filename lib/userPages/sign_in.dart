@@ -1,24 +1,25 @@
 import 'dart:ui';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:vehicle/adminPages/admin.dart';
-import 'package:vehicle/driverPages/driver_home.dart';
+import 'package:vehicle/core/errors/exceptions.dart';
+import 'package:vehicle/features/auth/domain/entities/app_user.dart';
+import 'package:vehicle/features/auth/presentation/providers/auth_providers.dart';
+import 'package:vehicle/routing/app_router.dart';
 import 'package:vehicle/services/app_logger.dart';
-import 'package:vehicle/userPages/home_screen.dart';
 
 final _log = AppLogger.getLogger('SignInPage');
 
-class SignInPage extends StatefulWidget {
+class SignInPage extends ConsumerStatefulWidget {
   const SignInPage({super.key});
 
   @override
-  State<SignInPage> createState() => _SignInPageState();
+  ConsumerState<SignInPage> createState() => _SignInPageState();
 }
 
-class _SignInPageState extends State<SignInPage> {
+class _SignInPageState extends ConsumerState<SignInPage> {
   String _email = '';
   String _password = '';
   bool _obscurePassword = true;
@@ -35,15 +36,13 @@ class _SignInPageState extends State<SignInPage> {
     setState(() => _isLoading = true);
     try {
       _log.info('Logging in student anonymously...');
-      await FirebaseAuth.instance.signInAnonymously();
+      await ref.read(signInAnonymouslyProvider).call();
       _log.info('Student login successful');
 
-      if (mounted) {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
-      }
+      if (mounted) context.go(RoutePaths.home);
     } catch (e, st) {
       _log.severe('Error during anonymous student login', e, st);
-      _showError('Student login failed: $e');
+      _showError('Student login failed: ${_friendlyError(e)}');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -60,61 +59,38 @@ class _SignInPageState extends State<SignInPage> {
     _log.info('Staff login attempt: email=$_email');
 
     try {
-      // 1. Authenticate with Firebase Auth
-      final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      final user = await ref.read(signInWithEmailProvider).call(
         email: _email,
         password: _password,
       );
 
-      final uid = userCredential.user?.uid;
-      if (uid == null) throw Exception("Authentication failed, no UID.");
+      _log.info('Login successful: ${user.role}');
 
-      // 2. Fetch role from Realtime Database: /users/<uid>/role
-      final snapshot = await FirebaseDatabase.instance.ref().child('users').child(uid).get();
-      if (!snapshot.exists) {
-        await FirebaseAuth.instance.signOut();
-        _showError('User record not found in database.');
-        return;
+      if (!mounted) return;
+
+      // Route based on role
+      switch (user.role) {
+        case UserRole.admin:
+          context.go(RoutePaths.admin);
+        case UserRole.driver:
+          if (user.assignedVehicle?.isEmpty ?? true) {
+            _showError('Notice: No vehicle currently assigned to this driver.');
+          }
+          context.go(RoutePaths.driver, extra: {
+            'driverId': user.uid,
+            'driverName': user.name,
+            'assignedVehicle': user.assignedVehicle ?? '',
+          });
+        case UserRole.student:
+          await ref.read(signOutProvider).call();
+          _showError('Unknown role. Contact your administrator.');
       }
-
-      final data = snapshot.value as Map<dynamic, dynamic>;
-      final role = data['role']?.toString() ?? '';
-
-      // 3. Route based on role from database
-      if (role == 'admin') {
-        _log.info('Admin login successful');
-        if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AdminPage()));
-      } else if (role == 'driver') {
-        final assignedVehicle = data['assignedVehicle']?.toString() ?? '';
-        final driverName = data['name']?.toString() ?? _email.split('@')[0];
-
-        if (assignedVehicle.isEmpty) {
-          _showError('Notice: No vehicle currently assigned to this driver.');
-        }
-
-        _log.info('Driver login successful');
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) => DriverHomePage(
-                driverId: uid,
-                driverName: driverName,
-                assignedVehicle: assignedVehicle,
-              ),
-            ),
-          );
-        }
-      } else {
-        await FirebaseAuth.instance.signOut();
-        _showError('Unknown role: "$role". Contact your administrator.');
-      }
-    } on FirebaseAuthException catch (e) {
-      _log.warning('Auth exception: ${e.message}');
-      _showError(e.message ?? 'Authentication failed');
+    } on AppException catch (e) {
+      _log.warning('Auth error: ${e.message}');
+      _showError(e.message);
     } catch (e, st) {
       _log.severe('Error during login', e, st);
-      _showError('Login error: $e');
+      _showError('Login error: ${_friendlyError(e)}');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -182,39 +158,18 @@ class _SignInPageState extends State<SignInPage> {
                           setDialogState(() => isCreating = true);
 
                           try {
-                            // Check if any admin already exists
-                            final usersSnap = await FirebaseDatabase.instance.ref().child('users').get();
-                            if (usersSnap.exists && usersSnap.value != null) {
-                              final users = usersSnap.value as Map<dynamic, dynamic>;
-                              final hasAdmin = users.values.any((u) {
-                                if (u is Map) return u['role'] == 'admin';
-                                return false;
-                              });
-                              if (hasAdmin) {
-                                setDialogState(() => isCreating = false);
-                                messenger.showSnackBar(const SnackBar(content: Text('An admin already exists. Ask them to add you.')));
-                                return;
-                              }
-                            }
-
-                            // Create the first admin
-                            final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+                            await ref.read(createFirstAdminProvider).call(
                               email: email,
                               password: password,
+                              name: name,
                             );
-                            final uid = cred.user!.uid;
 
-                            await FirebaseDatabase.instance.ref().child('users').child(uid).set({
-                              'role': 'admin',
-                              'name': name,
-                              'email': email,
-                            });
-
-                            _log.info('First admin created: $uid');
-
+                            _log.info('First admin created');
                             navigator.pop();
                             messenger.showSnackBar(SnackBar(content: Text('Admin "$name" created! You can now log in.')));
-                            await FirebaseAuth.instance.signOut();
+                          } on AppException catch (e) {
+                            setDialogState(() => isCreating = false);
+                            messenger.showSnackBar(SnackBar(content: Text(e.message)));
                           } catch (e, st) {
                             _log.severe('Error creating first admin', e, st);
                             setDialogState(() => isCreating = false);
@@ -231,6 +186,15 @@ class _SignInPageState extends State<SignInPage> {
         );
       },
     );
+  }
+
+  String _friendlyError(dynamic e) {
+    if (e is AppException) return e.message;
+    final s = e.toString();
+    if (s.contains('user-not-found')) return 'No account found with this email.';
+    if (s.contains('wrong-password')) return 'Incorrect password.';
+    if (s.contains('network-request-failed')) return 'No internet connection.';
+    return s;
   }
 
   Widget _buildDialogField(TextEditingController controller, String label, IconData icon, {bool isPassword = false, bool isEmail = false}) {

@@ -2,15 +2,18 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:vehicle/features/auth/presentation/providers/auth_providers.dart';
+import 'package:vehicle/features/tracking/presentation/providers/tracking_providers.dart';
+import 'package:vehicle/routing/app_router.dart';
 import 'package:vehicle/services/app_logger.dart';
-import 'package:vehicle/userPages/sign_in.dart';
 
 final _log = AppLogger.getLogger('DriverHome');
 
-class DriverHomePage extends StatefulWidget {
+class DriverHomePage extends ConsumerStatefulWidget {
   final String driverId;
   final String driverName;
   final String assignedVehicle;
@@ -23,11 +26,10 @@ class DriverHomePage extends StatefulWidget {
   });
 
   @override
-  State<DriverHomePage> createState() => _DriverHomePageState();
+  ConsumerState<DriverHomePage> createState() => _DriverHomePageState();
 }
 
-class _DriverHomePageState extends State<DriverHomePage> {
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+class _DriverHomePageState extends ConsumerState<DriverHomePage> {
   Timer? _locationTimer;
   bool _isLive = false;
   Position? _lastPosition;
@@ -56,14 +58,13 @@ class _DriverHomePageState extends State<DriverHomePage> {
   Future<void> _fetchVehicleDetails() async {
     _log.info('Fetching vehicle details for: ${widget.assignedVehicle}');
     try {
-      final snapshot = await _dbRef.child('vehicles').child(widget.assignedVehicle).get();
-      if (snapshot.exists) {
-        final data = snapshot.value as Map<dynamic, dynamic>;
+      final vehicle = await ref.read(vehicleDetailsProvider(widget.assignedVehicle).future);
+      if (vehicle != null && mounted) {
         setState(() {
-          _vehicleNumber = data['vehicleNumber']?.toString() ?? widget.assignedVehicle;
-          _driverMobileNumber = data['driverMobileNumber']?.toString() ?? '';
-          _boardingPoint = data['boardingPoint']?.toString() ?? '';
-          _destination = data['destination']?.toString() ?? '';
+          _vehicleNumber = vehicle.vehicleNumber;
+          _driverMobileNumber = vehicle.driverMobileNumber ?? '';
+          _boardingPoint = vehicle.boardingPoint ?? '';
+          _destination = vehicle.destination ?? '';
         });
         _log.info('Vehicle details loaded: number=$_vehicleNumber');
       } else {
@@ -97,19 +98,19 @@ class _DriverHomePageState extends State<DriverHomePage> {
 
   void _startTransmitting() {
     _log.info('Starting GPS transmission for vehicle: ${widget.assignedVehicle}');
+    final repo = ref.read(vehicleRepositoryProvider);
     _locationTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
       try {
         final position = await _determinePosition();
         final timestamp = DateTime.now().toIso8601String();
 
-        await _dbRef.child('vehicles').child(widget.assignedVehicle).update({
-          'location': {
-            'latitude': position.latitude,
-            'longitude': position.longitude,
-            'speed': position.speed, // m/s from Geolocator
-            'timestamp': timestamp,
-          },
-        });
+        await repo.updateVehicleLocation(
+          vehicleId: widget.assignedVehicle,
+          latitude: position.latitude,
+          longitude: position.longitude,
+          speed: position.speed,
+          timestamp: timestamp,
+        );
 
         setState(() {
           _lastPosition = position;
@@ -160,14 +161,11 @@ class _DriverHomePageState extends State<DriverHomePage> {
     );
   }
 
-  void _logout() {
+  void _logout() async {
     _stopTransmitting();
     _log.info('Driver ${widget.driverId} logging out');
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const SignInPage()),
-      (route) => false,
-    );
+    await ref.read(signOutProvider).call();
+    if (mounted) context.go(RoutePaths.signIn);
   }
 
   @override

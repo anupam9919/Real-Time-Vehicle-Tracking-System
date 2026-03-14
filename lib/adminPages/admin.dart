@@ -1,24 +1,26 @@
 import 'dart:ui';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:vehicle/adminPages/manage_drivers.dart';
 import 'package:vehicle/adminPages/manage_vehicles.dart';
+import 'package:vehicle/features/auth/presentation/providers/auth_providers.dart';
+import 'package:vehicle/routing/app_router.dart';
 import 'package:vehicle/services/app_logger.dart';
-import 'package:vehicle/userPages/sign_in.dart';
 
 final _log = AppLogger.getLogger('AdminPage');
 
-class AdminPage extends StatefulWidget {
+class AdminPage extends ConsumerStatefulWidget {
   const AdminPage({super.key});
 
   @override
-  State<AdminPage> createState() => _AdminPageState();
+  ConsumerState<AdminPage> createState() => _AdminPageState();
 }
 
-class _AdminPageState extends State<AdminPage> {
+class _AdminPageState extends ConsumerState<AdminPage> {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
 
   int _totalVehicles = 0;
@@ -144,28 +146,16 @@ class _AdminPageState extends State<AdminPage> {
                           try {
                             _log.info('Creating new admin: $email');
 
-                            // 1. Create Firebase Auth account
-                            final cred = await FirebaseAuth.instance
-                                .createUserWithEmailAndPassword(
+                            // Use the auth provider to create admin
+                            await ref.read(createFirstAdminProvider).call(
                               email: email,
                               password: password,
+                              name: name,
                             );
-                            final uid = cred.user!.uid;
 
-                            // 2. Write admin role to /users/<uid>
-                            await FirebaseDatabase.instance
-                                .ref()
-                                .child('users')
-                                .child(uid)
-                                .set({
-                              'role': 'admin',
-                              'name': name,
-                              'email': email,
-                            });
+                            _log.info('Admin account created');
 
-                            _log.info('Admin account created: $uid');
-
-                            // 3. Note: createUser auto-signs in as new user.
+                            // Note: createUser auto-signs in as new user.
                             //    The current admin will be signed out.
                             //    They'll need to re-login.
                             if (!dialogContext.mounted) return;
@@ -182,20 +172,9 @@ class _AdminPageState extends State<AdminPage> {
                               ),
                             );
                             // Sign out and go to login (since we're now signed in as new admin)
-                            await FirebaseAuth.instance.signOut();
+                            await ref.read(signOutProvider).call();
                             if (!context.mounted) return;
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(builder: (_) => const SignInPage()),
-                              (route) => false,
-                            );
-                          } on FirebaseAuthException catch (e) {
-                            _log.warning('Error creating admin: ${e.message}');
-                            setDialogState(() => isCreating = false);
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error: ${e.message}')),
-                            );
+                            context.go(RoutePaths.signIn);
                           } catch (e, st) {
                             _log.severe('Error creating admin', e, st);
                             setDialogState(() => isCreating = false);
@@ -223,7 +202,8 @@ class _AdminPageState extends State<AdminPage> {
 
   @override
   Widget build(BuildContext context) {
-    final adminEmail = FirebaseAuth.instance.currentUser?.email ?? 'Admin';
+    final currentUser = ref.watch(currentUserProvider);
+    final adminEmail = currentUser?.email ?? 'Admin';
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -247,13 +227,9 @@ class _AdminPageState extends State<AdminPage> {
                   tooltip: 'Logout',
                   onPressed: () async {
                     _log.info('Admin logging out');
-                    await FirebaseAuth.instance.signOut();
+                    await ref.read(signOutProvider).call();
                     if (!context.mounted) return;
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (_) => const SignInPage()),
-                      (route) => false,
-                    );
+                    context.go(RoutePaths.signIn);
                   },
                 ),
               ],
