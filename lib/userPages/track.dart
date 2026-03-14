@@ -175,7 +175,9 @@ class _TrackingPageState extends State<TrackingPage> {
   List<Duration> _calculateETAs(List<double> distances) {
     double busSpeedInKmPerHour = 30; // Configurable average speed
     return distances.map((distance) {
-      double distanceInKm = distance / 1000;
+      // Safely ensure distance is treated as double, as iOS sometimes returns int from Geolocator
+      double safeDistance = distance.toDouble();
+      double distanceInKm = safeDistance / 1000.0;
       double timeInHours = distanceInKm / busSpeedInKmPerHour;
       return Duration(seconds: (timeInHours * 3600).round());
     }).toList();
