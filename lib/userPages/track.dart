@@ -83,10 +83,22 @@ class _TrackingPageState extends State<TrackingPage> {
     // Load boarding points for this specific vehicle
     _dbRef.child('vehicles').child(vehicleName).child('boardingPoints').get().then((snap) {
       if (snap.exists && snap.value != null && mounted) {
-        final data = snap.value as Map<dynamic, dynamic>;
+        _log.info('Raw boardingPoints data for $vehicleName: ${snap.value}');
+        _log.info('Type of boardingPoints data: ${snap.value.runtimeType}');
+        
+        dynamic data = snap.value;
+        List<Map<dynamic, dynamic>> parsedPoints = [];
+        
+        if (data is Map) {
+          parsedPoints = data.values.whereType<Map<dynamic, dynamic>>().toList();
+        } else if (data is List) {
+          parsedPoints = data.whereType<Map<dynamic, dynamic>>().toList();
+        }
+
         setState(() {
-          _liveBoardingPoints = data.values.whereType<Map<dynamic, dynamic>>().toList();
+          _liveBoardingPoints = parsedPoints;
         });
+        _log.info('Parsed boarding points count: ${_liveBoardingPoints.length}');
         
         // Start tracking location for this vehicle
         _startTimer();
