@@ -5,52 +5,75 @@ A comprehensive Flutter-based real-time vehicle tracking application designed to
 ## 🚀 Features
 
 - **Role-Based Access Control**: Secure login system distinguishing between Administrators, Drivers, and Users (Students).
-- **Live Location Tracking**: Drivers can broadcast their real-time GPS coordinates, which are instantly reflected for users tracking their vehicles.
-- **Admin Dashboard**: Administrators can easily manage vehicles, assign drivers, and add boarding points.
-- **Driver Dashboard**: Drivers are provided with a dedicated interface indicating their assigned vehicle and the ability to toggle live location broadcasting, complete with an SOS feature.
-- **ETA Calculation**: Users can view estimated time of arrival based on the current location of the vehicle.
+- **Live Location Tracking**: Drivers broadcast real-time GPS coordinates (every 5 seconds), instantly reflected for users tracking vehicles.
+- **ETA & Distance Calculation**: Real-time ETA computed using live GPS speed and straight-line distance (Vincenty formula via Geolocator).
+- **Nearest Bus Stop Finder**: Automatically detects user's location and finds the closest boarding point with walking ETA.
+- **Admin Dashboard**: Full CRUD for vehicles, drivers, and boarding points.
+- **Driver Dashboard**: Dedicated interface with live GPS transmission toggle, speed display, and SOS emergency button.
+- **Premium Glassmorphic UI**: Dark-themed, frosted-glass design with smooth animations powered by Flutter Animate.
+- **CI/CD Pipeline**: Automated APK builds and GitHub Releases via GitHub Actions on version tags.
 
 ## 🛠 Tech Stack
 
-- **Frontend**: Flutter (Dart)
-- **Backend**: Firebase Realtime Database
-- **Location Services**: Geolocator (GPS)
-- **Environment Management**: `flutter_dotenv`
+| Layer | Technology |
+| :--- | :--- |
+| **Framework** | Flutter (Dart SDK `≥3.3.1 <4.0.0`) |
+| **Backend** | Firebase Realtime Database |
+| **Authentication** | Firebase Auth |
+| **State Management** | Riverpod (`flutter_riverpod`) |
+| **Routing** | GoRouter (`go_router`) |
+| **Location / GPS** | Geolocator |
+| **Code Generation** | Freezed + JSON Serializable |
+| **UI / Design** | Google Fonts, Flutter Animate, Timeline Tile |
+| **Logging** | Dart `logging` package with custom `AppLogger` |
+| **CI/CD** | GitHub Actions (automated APK build + release) |
 
-## 🏗 Architecture Diagram
+## 🏗 Architecture
+
+The project follows a **Clean Architecture** pattern with feature-based modules:
 
 ```mermaid
 graph TD
-    subgraph Frontend - Flutter App
-        SignIn[Sign-In Module]
-        UserApp[User / Student Interface]
+    subgraph Presentation
+        SignIn[Sign-In Screen]
+        UserApp[Student Interface]
         DriverApp[Driver Dashboard]
-        AdminApp[Admin Interface]
+        AdminApp[Admin Panel]
+        Providers[Riverpod Providers]
     end
 
-    subgraph Firebase
-        FDB[(Firebase Realtime DB)]
-        NodeDrivers[drivers/ node]
-        NodeVehicles[vehicles/ node]
-        NodeLocation[location/ node inside vehicles]
+    subgraph Domain
+        UseCases[Use Cases]
+        Repos[Repository Interfaces]
+        Entities[Entities]
     end
 
-    subgraph External Services
+    subgraph Data
+        RepoImpl[Repository Implementations]
+        DataSources[Remote Data Sources]
+        Models[Data Models - Freezed]
+    end
+
+    subgraph Core
+        LocationSvc[Location Service]
+        DistUtils[Distance Utils - Haversine]
+        EtaUtils[ETA Utils]
+        Theme[App Theme]
+        Router[GoRouter]
+    end
+
+    subgraph External
+        Firebase[(Firebase RTDB)]
         Geolocator[Geolocator API]
     end
 
-    SignIn -->|Authenticates| UserApp
-    SignIn -->|Authenticates against .env| AdminApp
-    SignIn -->|Authenticates| DriverApp
-    DriverApp -->|Fetches credentials| NodeDrivers
-
-    DriverApp -->|Gets Lat/Lng| Geolocator
-    DriverApp -->|Updates stream| NodeLocation
-    
-    AdminApp -->|CRUD Operations| NodeVehicles
-    AdminApp -->|CRUD Operations| NodeDrivers
-    
-    UserApp -->|Listens to| NodeLocation
+    Presentation --> Providers
+    Providers --> UseCases
+    UseCases --> Repos
+    RepoImpl --> DataSources
+    DataSources --> Firebase
+    DriverApp --> Geolocator
+    LocationSvc --> Geolocator
 ```
 
 ## 🔄 Flow Diagrams
@@ -119,7 +142,7 @@ sequenceDiagram
 
 1. **Clone the repository**
    ```bash
-   git clone <repository_url>
+   git clone https://github.com/anupam9919/Real-Time-Vehicle-Tracking-System.git
    cd Real-Time-Vehicle-Tracking-System
    ```
 
@@ -142,23 +165,27 @@ sequenceDiagram
    flutter run
    ```
 
-## 📁 Key Directories
+## 📁 Project Structure
 
-- `lib/adminPages/`: Features mapping to Admin capabilities (add drivers, vehicles, boarding points).
-- `lib/driverPages/`: Dedicated UI for drivers including the location transmission logic.
-- `lib/userPages/`: UI for actual end-users (students) tracking the vehicles.
-- `lib/services/`: Reusable services like custom `AppLogger` for structured logging.
-- `lib/firebase.dart`: Core wrapper around Firebase SDK to handle ETA and static location fetches.
+```
+lib/
+├── core/                   # Shared utilities, theme, services, constants
+│   ├── constants/          # Firebase path constants
+│   ├── errors/             # Custom exceptions and failure classes
+│   ├── services/           # Location service (GPS abstraction)
+│   ├── theme/              # App colors and theme data
+│   └── utils/              # Distance (Haversine) and ETA utilities
+├── features/
+│   ├── auth/               # Authentication (data → domain → presentation)
+│   └── tracking/           # Vehicle tracking (data → domain → presentation)
+├── routing/                # GoRouter configuration with auth guards
+├── config/                 # Environment configuration
+├── components/             # Shared UI widgets (Bus Stop finder)
+├── adminPages/             # Admin screens (manage vehicles, drivers, boarding points)
+├── driverPages/            # Driver dashboard with live GPS transmission
+├── userPages/              # Student screens (home, track, search, account)
+├── services/               # App-wide services (structured logger)
+└── main.dart               # App entry point
+```
 
 ---
-
-## 🌟 Meet the Team
-
-A dedicated team of developers who built and brought this Real-Time Tracking System to life:
-
-| Contributor | GitHub Profile |
-| :--- | :--- |
-| **Anupam Singh** *(Lead)* | [@anupam9919](https://github.com/anupam9919) | 
-| **Abhishek Srivastav** | [@srivastavabhishek936](https://github.com/srivastavabhishek936) |
-| **Kaushiki Srivastava** | [@Kaushh21](https://github.com/Kaushh21) |
-| **Kanchi Gupta** | [@KanchiGupta183](https://github.com/KanchiGupta183) |
