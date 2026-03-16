@@ -83,26 +83,26 @@ graph TD
 sequenceDiagram
     participant User
     participant App as Flutter App
-    participant Env as .env Configuration
-    participant Firebase as Firebase DB
+    participant Auth as Firebase Auth
+    participant DB as Firebase Realtime DB
 
-    User->>App: Enter ID, Password, and Role
-    App->>App: Validate Inputs
-    
-    alt Role == Student / Admin
-        App->>Env: Check against STUDENT_ID/ADMIN_ID
-        alt Match
-            App->>User: Grant Access (Home / Admin Page)
-        else No Match
-            App->>User: Show Invalid Credentials Error
-        end
-    else Role == Driver
-        App->>Firebase: Fetch driver details (drivers/{id})
-        Firebase-->>App: Return Driver Data
-        alt Match Password && Has Assigned Vehicle
-            App->>User: Grant Access (Driver Dashboard)
-        else Error
-            App->>User: Show Error (Invalid Password / No Vehicle)
+    alt Student
+        User->>App: Tap "Track Buses as Student"
+        App->>Auth: signInAnonymously()
+        Auth-->>App: Anonymous UID
+        App->>User: Grant Access (Home / Tracking)
+    else Admin / Driver
+        User->>App: Enter Email & Password
+        App->>Auth: signInWithEmailAndPassword()
+        Auth-->>App: Authenticated UID
+        App->>DB: Lookup role in admins/ and drivers/ nodes
+        DB-->>App: Return role & profile
+        alt Role == Admin
+            App->>User: Route to Admin Dashboard
+        else Role == Driver
+            App->>User: Route to Driver Dashboard
+        else Unknown
+            App->>User: Show Error
         end
     end
 ```
@@ -136,7 +136,8 @@ sequenceDiagram
 ### Prerequisites
 - Flutter SDK (`>=3.3.1 <4.0.0`)
 - Android Studio / VS Code
-- Firebase Project configured and `google-services.json` / `GoogleService-Info.plist` added.
+- A Firebase project with **Authentication** (Email/Password + Anonymous) and **Realtime Database** enabled
+- `google-services.json` placed in `android/app/` (generated via FlutterFire CLI)
 
 ### Installation
 
@@ -151,13 +152,13 @@ sequenceDiagram
    flutter pub get
    ```
 
-3. **Configure Environment Variables**
-   Create a `.env` file in the root directory based on `.env.example`:
-   ```env
-   STUDENT_ID=your_student_id
-   STUDENT_PASSWORD=your_student_password
-   ADMIN_ID=your_admin_id
-   ADMIN_PASSWORD=your_admin_password
+3. **Configure Firebase**
+   ```bash
+   # Install FlutterFire CLI (if not already installed)
+   dart pub global activate flutterfire_cli
+
+   # Generate firebase_options.dart
+   flutterfire configure
    ```
 
 4. **Run the App**
