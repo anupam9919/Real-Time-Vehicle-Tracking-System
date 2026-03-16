@@ -150,3 +150,15 @@ sequenceDiagram
 - `lib/services/`: Reusable services like custom `AppLogger` for structured logging.
 - `lib/firebase.dart`: Core wrapper around Firebase SDK to handle ETA and static location fetches.
 
+---
+
+## 🌟 Meet the Team
+
+A dedicated team of developers who built and brought this Real-Time Tracking System to life:
+
+| Contributor | GitHub Profile |
+| :--- | :--- |
+| **Anupam Singh** *(Lead)* | [@anupam9919](https://github.com/anupam9919) | 
+| **Abhishek Srivastav** | [@srivastavabhishek936](https://github.com/srivastavabhishek936) |
+| **Kaushiki Srivastava** | [@Kaushh21](https://github.com/Kaushh21) |
+| **Kanchi Gupta** | [@KanchiGupta183](https://github.com/KanchiGupta183) |

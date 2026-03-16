@@ -55,3 +55,4 @@ lib/firebase_options.dart
 # Architecture docs (personal, not for repo)
 architecture_review.md
 implementation_plan.md
+distance_eta_analysis.md

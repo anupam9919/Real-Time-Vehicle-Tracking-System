@@ -1,0 +1,12 @@
+# Ignore Flutter generated boilerplate from GitHub language statistics
+android/* linguist-vendored
+ios/* linguist-vendored
+linux/* linguist-vendored
+macos/* linguist-vendored
+web/* linguist-vendored
+windows/* linguist-vendored
+
+# Explicitly ignore common auto-generated files
+**/*.pbxproj linguist-generated
+**/*.xcworkspacedata linguist-generated
+**/Podfile.lock linguist-generated
