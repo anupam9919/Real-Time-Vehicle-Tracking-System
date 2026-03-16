@@ -10,6 +10,7 @@ A comprehensive Flutter-based real-time vehicle tracking application designed to
 - **Nearest Bus Stop Finder**: Automatically detects user's location and finds the closest boarding point with walking ETA.
 - **Admin Dashboard**: Full CRUD for vehicles, drivers, and boarding points.
 - **Driver Dashboard**: Dedicated interface with live GPS transmission toggle, speed display, and SOS emergency button.
+- **First Admin Setup**: Hidden setup flow to bootstrap the first admin account when no admin exists yet.
 - **Premium Glassmorphic UI**: Dark-themed, frosted-glass design with smooth animations powered by Flutter Animate.
 - **CI/CD Pipeline**: Automated APK builds and GitHub Releases via GitHub Actions on version tags.
 
@@ -63,6 +64,7 @@ graph TD
     end
 
     subgraph External
+        FireAuth[Firebase Auth]
         Firebase[(Firebase RTDB)]
         Geolocator[Geolocator API]
     end
@@ -95,7 +97,7 @@ sequenceDiagram
         User->>App: Enter Email & Password
         App->>Auth: signInWithEmailAndPassword()
         Auth-->>App: Authenticated UID
-        App->>DB: Lookup role in admins/ and drivers/ nodes
+        App->>DB: Lookup role in users/{uid} node
         DB-->>App: Return role & profile
         alt Role == Admin
             App->>User: Route to Admin Dashboard
@@ -119,7 +121,7 @@ sequenceDiagram
     Driver->>DriverApp: Click "GO LIVE"
     loop Every 5 Seconds
         DriverApp->>GPS: Request Current Location
-        GPS-->>DriverApp: Latitude & Longitude
+        GPS-->>DriverApp: Latitude, Longitude & Speed
         DriverApp->>DB: Update `vehicles/{vehicleId}/location`
     end
     
